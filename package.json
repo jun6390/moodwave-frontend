@@ -1,23 +1,13 @@
 {
   "name": "moodwave-fe",
   "version": "1.0.0",
+  "private": true,
   "description": "음악 스트리밍 개인화 추천 웹 서비스",
   "scripts": {
-    "dev": "vite --host 127.0.0.1 --port 5500",
+    "dev": "vite --open",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview --open"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ureca-void/moodwave-frontend.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/ureca-void/moodwave-frontend/issues"
-  },
-  "homepage": "https://github.com/ureca-void/moodwave-frontend#readme",
   "devDependencies": {
     "vite": "^8.0.14"
   }
