@@ -4,9 +4,9 @@
   "private": true,
   "description": "음악 스트리밍 개인화 추천 웹 서비스",
   "scripts": {
-    "dev": "vite --open",
+    "dev": "vite --host 127.0.0.1 --port 5173 --open",
     "build": "vite build",
-    "preview": "vite preview --open"
+    "preview": "vite preview --host 127.0.0.1 --port 4173 --open"
   },
   "devDependencies": {
     "vite": "^8.0.14"
