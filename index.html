@@ -15,12 +15,73 @@
     <div class="container">
       <!-- 사이드바 -->
       <aside class="sidebar">
-        <h1>Sidebar</h1>
+        <div class="sidebar__header">
+          <!-- 로고 -->
+          <div class="sidebar__brand">
+            <a href="index.html" class="sidebar__brand-link">
+              <img src="assets/icon/logo.svg" alt="MOOD WAVE 로고" />
+              <span>MOOD WAVE</span>
+            </a>
+          </div>
+
+          <!-- 주요 메뉴 -->
+          <nav
+            id="primaryNav"
+            class="sidebar__nav-primary"
+            aria-label="주요 메뉴"
+          ></nav>
+
+          <!-- 플레이리스트 메뉴 -->
+          <nav
+            id="secondaryNav"
+            class="sidebar__nav-secondary"
+            aria-label="플레이리스트 메뉴"
+          ></nav>
+        </div>
+
+        <div class="sidebar__divider" aria-hidden="true"></div>
+
+        <!-- 플레이리스트 목록 -->
+        <div id="playlistList" class="sidebar__playlist-list"></div>
       </aside>
 
       <!-- 헤더 -->
       <header class="header">
-        <h1>Header</h1>
+        <button class="header__nav-btn" type="button" aria-label="뒤로">
+          <img src="assets/icon/Back.svg" width="40" height="40" alt="" />
+        </button>
+
+        <button class="header__nav-btn" type="button" aria-label="앞으로">
+          <img src="assets/icon/Forward.svg" width="40" height="40" alt="" />
+        </button>
+
+        <div class="header__search">
+          <img
+            class="header__search-icon"
+            src="assets/icon/Search_S.svg"
+            width="32"
+            height="32"
+            alt=""
+          />
+          <span class="header__search-placeholder">
+            Artists, songs, or podcasts
+          </span>
+        </div>
+
+        <span class="header__spacer" aria-hidden="true"></span>
+
+        <div class="header__profile">
+          <img
+            id="userAvatar"
+            class="header__avatar"
+            src=""
+            width="34"
+            height="34"
+            alt=""
+          />
+          <span id="userName" class="header__username"></span>
+          <span class="header__profile-arrow"></span>
+        </div>
       </header>
 
       <!-- 메인 -->
@@ -28,6 +89,7 @@
         <h1>Main</h1>
       </main>
 
+      <!-- 푸터 -->
       <footer class="player">
         <h1>Footer</h1>
       </footer>
