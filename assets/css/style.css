@@ -168,10 +168,11 @@
   min-width: 0;
   height: 80px;
   padding: 0 clamp(20px, 3vw, 41px);
-  overflow: hidden;
+  overflow: visible;
   background: #3333a3;
 }
 
+/* 앞, 뒤 버튼 */
 .header__nav-btn {
   display: flex;
   align-items: center;
@@ -180,16 +181,10 @@
   width: 40px;
   height: 40px;
   padding: 0;
-  border: 0;
-  background: transparent;
   cursor: pointer;
 }
 
-.header__nav-btn img {
-  width: 40px;
-  height: 40px;
-}
-
+/* 검색창 */
 .header__search {
   display: flex;
   align-items: center;
@@ -228,20 +223,22 @@
   min-width: 0;
 }
 
+/* 프로필 */
 .header__profile {
+  position: relative;
   display: flex;
   align-items: center;
   flex-shrink: 0;
   gap: 11px;
   max-width: 220px;
   height: 40px;
-  padding: 3px 16px 3px 3px;
-  overflow: hidden;
+  padding: 3px 8px 3px 3px;
+  overflow: visible;
   border-radius: 40px;
   background: rgba(0, 0, 0, 0.8);
 }
 
-.header__avatar {
+.header__user-avatar {
   flex-shrink: 0;
   width: 34px;
   height: 34px;
@@ -249,15 +246,26 @@
   object-fit: cover;
 }
 
-.header__username {
+.header__user-name {
   min-width: 0;
   overflow: hidden;
   font-size: 18px;
   font-weight: 700;
   line-height: 23px;
-  color: #fff;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+/* 드롭다운 버튼 */
+.header__profile-arrow-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  cursor: pointer;
 }
 
 .header__profile-arrow {
@@ -267,6 +275,37 @@
   border-top: 6px solid #fff;
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
+}
+
+.header__dropdown {
+  display: none;
+  position: absolute;
+  top: 48px;
+  right: 0;
+  z-index: 100;
+  min-width: 120px;
+  padding: 6px;
+  border-radius: 8px;
+  background: #282828;
+}
+
+.header__profile.is-open .header__dropdown {
+  display: block;
+}
+
+.header__logout-btn {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+}
+
+.header__logout-btn:hover {
+  background: #3e3e3e;
 }
 
 /* =========================

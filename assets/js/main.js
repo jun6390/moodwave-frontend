@@ -114,6 +114,14 @@ function renderUser() {
   document.querySelector("#userAvatar").src = user.avatar;
 }
 
+// 프로필 드롭 다운
+const profile = document.querySelector(".header__profile");
+const profileArrowButton = document.querySelector(".header__profile-arrow-btn");
+
+profileArrowButton.addEventListener("click", () => {
+  profile.classList.toggle("is-open");
+});
+
 // =========================
 // 초기 실행 함수
 // =========================

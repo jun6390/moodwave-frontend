@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="assets/css/setting/vars.css" />
     <link rel="stylesheet" href="assets/css/setting/reset.css" />
     <link rel="stylesheet" href="assets/css/setting/common.css" />
-    <link rel="stylesheet" href="assets/css/layout.css" />
+    <link rel="stylesheet" href="assets/css/style.css" />
     <script type="module" src="assets/js/main.js"></script>
   </head>
   <body>
@@ -47,14 +47,15 @@
 
       <!-- 헤더 -->
       <header class="header">
+        <!-- 메뉴 버튼 -->
         <button class="header__nav-btn" type="button" aria-label="뒤로">
           <img src="assets/icon/Back.svg" width="40" height="40" alt="" />
         </button>
-
         <button class="header__nav-btn" type="button" aria-label="앞으로">
           <img src="assets/icon/Forward.svg" width="40" height="40" alt="" />
         </button>
 
+        <!-- 검색창 -->
         <div class="header__search">
           <img
             class="header__search-icon"
@@ -70,17 +71,31 @@
 
         <span class="header__spacer" aria-hidden="true"></span>
 
+        <!-- 프로필 -->
         <div class="header__profile">
           <img
             id="userAvatar"
-            class="header__avatar"
+            class="header__user-avatar"
             src=""
             width="34"
             height="34"
             alt=""
           />
-          <span id="userName" class="header__username"></span>
-          <span class="header__profile-arrow"></span>
+
+          <span id="userName" class="header__user-name"></span>
+
+          <!-- 드롭다운 버튼 -->
+          <button
+            class="header__profile-arrow-btn"
+            type="button"
+            aria-label="프로필 메뉴 열기"
+          >
+            <span class="header__profile-arrow" aria-hidden="true"></span>
+          </button>
+
+          <div class="header__dropdown">
+            <button class="header__logout-btn" type="button">Logout</button>
+          </div>
         </div>
       </header>
 
