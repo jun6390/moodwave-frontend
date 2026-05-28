@@ -22,7 +22,7 @@ const playlistMap = {
     desc: '차분하게 하루를 정리하고 싶을 때',
     image: '/assets/img/rainy-2.jpg',
     icon: '/assets/icon/rainy.svg',
-    page: '/pages/playlist-rainy.html',
+    page: '/pages/playlist.html?playlist=rainy',
   },
 
   Clouds: {
@@ -31,9 +31,9 @@ const playlistMap = {
     title: 'Cloudy Skies',
     genre: 'Dream Pop • Indie • Chill',
     desc: '흐린 하늘 아래 생각에 잠기고 싶은 순간',
-    image: '/assets/img/cloudy-1.png',
+    image: '/assets/img/cloudy.jpg',
     icon: '/assets/icon/cloudy.svg',
-    page: '/pages/playlist.html',
+    page: '/pages/playlist.html?playlist=cloudy',
   },
 
   Clear: {
@@ -42,9 +42,9 @@ const playlistMap = {
     title: 'Golden Hour',
     genre: 'Pop • Funk • Chill Pop',
     desc: '햇살 가득한 오후를 더 밝게 만들 음악',
-    image: '/assets/img/sunny-2.jpg',
+    image: '/assets/img/sunny-4.jpg',
     icon: '/assets/icon/sunny.svg',
-    page: '/pages/playlist-sunny.html',
+    page: '/pages/playlist.html?playlist=sunny',
   },
 
   Snow: {
@@ -53,9 +53,9 @@ const playlistMap = {
     title: 'Winter Hush',
     genre: 'Piano • Ambient • Jazz',
     desc: '포근한 겨울 감성에 어울리는 플레이리스트',
-    image: '/assets/img/snowy.jpg',
+    image: '/assets/img/snowy-3.jpg',
     icon: '/assets/icon/snowy.svg',
-    page: '/pages/playlist-sunny.html',
+    page: '/pages/playlist.html?playlist=snowy',
   },
 
   Thunderstorm: {
@@ -66,7 +66,7 @@ const playlistMap = {
     desc: '거센 빗소리 속 몰입하고 싶은 밤',
     image: '/assets/img/stormy.jpg',
     icon: '/assets/icon/stormy.svg',
-    page: '/pages/playlist-stormy.html',
+    page: '/pages/playlist.html?playlist=stormy',
   },
 
   Foggy: {
@@ -77,7 +77,7 @@ const playlistMap = {
     desc: '몽환적인 새벽 공기와 어울리는 사운드',
     image: '/assets/img/foggy.jpg',
     icon: '/assets/icon/foggy.svg',
-    page: '/pages/playlist-foggy.html',
+    page: '/pages/playlist.html?playlist=foggy',
   },
 };
 
@@ -168,6 +168,7 @@ function renderWeatherCards(currentWeather) {
 
     const card = document.createElement('a');
     card.className = 'weather-card';
+    card.href = playlist.page;
     card.innerHTML = `
   <img class="other-weather-img" src="${playlist.image}" alt="${playlist.title}"/>
   <div class="weather-card-content">
