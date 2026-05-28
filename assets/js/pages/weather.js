@@ -1,16 +1,9 @@
-import { renderHeader } from '../components/header.js';
-import { renderSidebar } from '../components/sidebar.js';
-import { renderFooter } from '../components/footer.js';
+import { renderCommonLayout } from '../layout/commonLayout.js';
 
-function initLayout() {
-  const header = document.getElementById('header');
-  const sidebar = document.getElementById('sidebar');
-  const footer = document.getElementById('footer');
-
-  if (header) header.innerHTML = renderHeader();
-  if (sidebar) sidebar.innerHTML = renderSidebar();
-  if (footer) footer.innerHTML = renderFooter();
-}
+// =========================
+// 초기 실행
+// =========================
+renderCommonLayout();
 
 function initWeather() {
   console.log('Weather page loaded');
