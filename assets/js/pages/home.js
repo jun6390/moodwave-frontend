@@ -1,0 +1,143 @@
+import {
+  ICON_PATH,
+  midMixes,
+  popularPlaylists,
+  latestPlaylists,
+} from "../data.js";
+
+// =========================
+// 홈 HTML 렌더링 함수
+// =========================
+export function renderHome() {
+  return `
+    <h1 id="greeting" class="main__greeting"></h1>
+
+    <div id="midMixes" class="mid-mixes"></div>
+
+    <section class="section">
+      <div class="section__header">
+        <h2 class="section__title">Popular</h2>
+        <a href="popular.html" class="section__see-all">SEE ALL</a>
+      </div>
+
+      <div id="popularGrid" class="section__grid"></div>
+    </section>
+
+    <section class="section">
+      <div class="section__header">
+        <h2 class="section__title">Latest</h2>
+        <a href="latest.html" class="section__see-all">SEE ALL</a>
+      </div>
+
+      <div id="latestGrid" class="section__grid"></div>
+    </section>
+  `;
+}
+
+// =========================
+// 중간 믹스 카드 생성 함수
+// =========================
+function createMidMixCard(item) {
+  return `
+    <article class="mid-mix">
+      <img
+        class="mid-mix__cover"
+        src="${item.cover}"
+        width="82"
+        height="82"
+        alt=""
+      />
+
+      <span class="mid-mix__title">${item.title}</span>
+
+      <button class="mid-mix__play" type="button" aria-label="재생">
+        <img
+          src="${ICON_PATH}Play_Greem Hover.svg"
+          width="62"
+          height="62"
+          alt=""
+        />
+      </button>
+    </article>
+  `;
+}
+
+// =========================
+// 중간 믹스 렌더링 함수
+// =========================
+function renderMidMixes() {
+  const midMixesElement = document.querySelector("#midMixes");
+  const rowSize = 3;
+  let html = "";
+
+  for (let i = 0; i < midMixes.length; i += rowSize) {
+    const rowItems = midMixes.slice(i, i + rowSize);
+
+    html += `
+      <div class="mid-mixes__row">
+        ${rowItems.map(createMidMixCard).join("")}
+      </div>
+    `;
+  }
+
+  midMixesElement.innerHTML = html;
+}
+
+// =========================
+// 그리드 카드 생성 함수
+// =========================
+function createGridCard(item) {
+  return `
+    <article class="grid-card">
+      <div class="grid-card__art-wrap">
+        <img
+          class="grid-card__art"
+          src="${item.cover}"
+          width="182"
+          height="182"
+          alt=""
+        />
+
+        <button class="grid-card__play" type="button" aria-label="재생">
+          <img
+            src="${ICON_PATH}Play_Greem Hover.svg"
+            width="62"
+            height="62"
+            alt=""
+          />
+        </button>
+      </div>
+
+      <div class="grid-card__info">
+        <span class="grid-card__name">${item.title}</span>
+        <span class="grid-card__desc">${item.description}</span>
+      </div>
+    </article>
+  `;
+}
+
+// =========================
+// 그리드 렌더링 함수
+// =========================
+function renderGrid(selector, data) {
+  const grid = document.querySelector(selector);
+
+  grid.innerHTML = data.map(createGridCard).join("");
+}
+
+// =========================
+// 인사말 렌더링 함수
+// =========================
+function renderGreeting() {
+  document.querySelector("#greeting").textContent = "Hello Ureca";
+}
+
+// =========================
+// 홈 초기 실행 함수
+// =========================
+export function initHome() {
+  renderGreeting();
+  renderMidMixes();
+  renderGrid("#popularGrid", popularPlaylists);
+  renderGrid("#latestGrid", latestPlaylists);
+}

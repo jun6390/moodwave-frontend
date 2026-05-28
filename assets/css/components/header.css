@@ -1,0 +1,153 @@
+/* =========================
+   헤더
+========================= */
+.header {
+  grid-area: header;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  width: 100%;
+  min-width: 0;
+  height: 80px;
+  padding: 0 clamp(20px, 3vw, 41px);
+  overflow: visible;
+  background: #3333a3;
+}
+
+/* 앞, 뒤 버튼 */
+.header__nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* 검색창 */
+.header__search {
+  display: flex;
+  align-items: center;
+  flex: 0 1 468px;
+  gap: 14px;
+  min-width: 180px;
+  max-width: 468px;
+  height: 52px;
+  padding: 0 16px;
+  overflow: hidden;
+  border-radius: 26px;
+  background: #fff;
+}
+
+.header__search-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  filter: brightness(0);
+  opacity: 0.7;
+}
+
+.header__search-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 18px;
+  font-weight: 450;
+  line-height: 23px;
+  color: #222;
+}
+
+.header__search-input::placeholder {
+  color: #757575;
+}
+
+.header__spacer {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 프로필 */
+.header__profile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 11px;
+  max-width: 220px;
+  height: 40px;
+  padding: 3px 8px 3px 3px;
+  overflow: visible;
+  border-radius: 40px;
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.header__user-avatar {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.header__user-name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 23px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 드롭다운 버튼 */
+.header__profile-arrow-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.header__profile-arrow {
+  flex-shrink: 0;
+  width: 0;
+  height: 0;
+  border-top: 6px solid #fff;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+}
+
+.header__dropdown {
+  display: none;
+  position: absolute;
+  top: 48px;
+  right: 0;
+  z-index: 100;
+  min-width: 120px;
+  padding: 6px;
+  border-radius: 8px;
+  background: #282828;
+}
+
+.header__profile.is-open .header__dropdown {
+  display: block;
+}
+
+.header__logout-btn {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+}
+
+.header__logout-btn:hover {
+  background: #3e3e3e;
+}

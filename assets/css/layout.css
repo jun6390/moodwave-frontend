@@ -1,0 +1,18 @@
+/* =========================
+   전체 컨테이너
+========================= */
+.container {
+  display: grid;
+  grid-template-columns: 310px minmax(0, 1fr);
+  grid-template-rows: 80px minmax(0, 1fr) 112px;
+  grid-template-areas:
+    "sidebar header"
+    "sidebar main"
+    "footer footer";
+
+  width: 100%;
+  min-width: 0;
+  height: 100vh;
+  background: #121212;
+  overflow: hidden;
+}
