@@ -20,11 +20,13 @@
     <div class="container">
       <aside id="sidebar" class="sidebar"></aside>
       <header id="header" class="header"></header>
+      <!-- <div class="playlist-overlay"></div> -->
       <main class="main playlist-main">
-        <div class="playlist-title-container">
-          <img src="" alt="" class="playlist-cover" />
+        <!-- 플레이리스트 히어로 섹션 -->
+        <div class="playlist-hero-container">
+          <div src="" alt="" class="playlist-cover"></div>
           <div class="playlist-info">
-            <p class="playlist-label">PUBLIC PLAYLIST</p>
+            <p class="section-label">PUBLIC PLAYLIST</p>
             <h1 class="playlist-title">Overcast Vibes</h1>
             <p class="playlist-desc">Rainy nights, blurred city lights, and slow indie tracks</p>
             <p class="playlist-meta">Generated from today's weather</p>
@@ -33,39 +35,25 @@
 
         <div class="playlist-content-container">
           <div class="playlist-actions">
-            <a href=""><img src="" alt="" class="play-btn" /></a>
-            <a href=""><img src="" alt="" class="liked-btn" /></a>
-            <a href=""><img src="" alt="" class="download-btn" /></a>
+            <div class="playlist-actions-btn">
+              <a href="" class="play-btn"><img src="/assets/icon/Play_Greem Hover.svg" alt="" /></a>
+              <a href="" class="liked-btn"><img src="/assets/icon/Heart_XS.svg" alt="" /></a>
+              <a href="" class="download-btn"><img src="/assets/icon/Download_XS.svg" alt="" /></a>
+            </div>
+            <a class="playlist-sort">
+              Custom order
+              <img src="/assets/icon/sort-btn.svg" alt="" class="sort-icon" />
+            </a>
           </div>
-          <div class="playlist-sort">
-            Custom order
-            <img src="" alt="" class="sort-icon" />
-          </div>
+          <!-- 플레이리스트 목록 -->
           <section class="playlist-section">
             <div class="playlist-header">
               <span>#</span>
               <span>Title</span>
               <span></span>
-              <span>시계아이콘</span>
+              <img src="/assets/icon/Clock_XS.svg" />
             </div>
-            <div class="playlist-list">
-              <article class="track-row">
-                <div class="track-number">1</div>
-                <div class="track-info">
-                  <img src="" alt="" class="track-cover" />
-                  <div class="track-text">
-                    <p class="track-title">곡 제목</p>
-                    <span class="track-artist">가수</span>
-                  </div>
-                </div>
-
-                <button class="track-like">
-                  <img src="" alt="" class="btn-liked" />
-                </button>
-
-                <div class="track-time">3:29</div>
-              </article>
-            </div>
+            <div class="playlist-list"></div>
           </section>
         </div>
       </main>

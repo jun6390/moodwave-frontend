@@ -8,13 +8,12 @@
   overflow-y: auto;
 }
 
+/* 현재 날씨 인포 */
 .section-label {
   margin-bottom: 16px;
   font-size: 20px;
   font-weight: 700;
 }
-
-/* 현재 날씨 인포 */
 
 .weather-heading {
   display: flex;
@@ -43,7 +42,7 @@
   display: inline-block;
   margin-top: 8px;
   font-size: 16px;
-  opacity: 0.8;
+  color: #b3b3b3;
 }
 
 /* 대표 플레이리스트 */
@@ -100,7 +99,7 @@
   margin-bottom: 12px;
   font-size: 16px;
   font-weight: 700;
-  opacity: 0.8;
+  color: #b3b3b3;
 }
 
 .featured-playlist-info .playlist-title {

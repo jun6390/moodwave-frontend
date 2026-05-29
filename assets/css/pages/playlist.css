@@ -1,6 +1,125 @@
+.playlist-main {
+  padding: 30px clamp(20px, 3vw, 41px) 50px;
+  overflow-y: auto;
+}
+
+/* 플레이리스트 히어로 섹션 */
+.section-label {
+  margin-bottom: 8px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.playlist-hero-container {
+  display: flex;
+  width: 100%;
+  max-width: 1200px;
+  min-height: 250px;
+}
+
+.playlist-cover {
+  width: 250px;
+  height: 250px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 8px;
+  position: relative;
+  background: #666;
+}
+
+.playlist-info {
+  display: flex;
+  flex-direction: column;
+  padding: 48px 48px 0;
+  justify-content: end;
+}
+
+.playlist-info .playlist-title {
+  font-size: 80px;
+  font-weight: 700;
+}
+
+.playlist-info .playlist-desc {
+  margin-top: 16px;
+  font-size: 16px;
+  color: #b3b3b3;
+}
+
+.playlist-info .playlist-meta {
+  margin-top: 8px;
+  font-size: 16px;
+  color: #b3b3b3;
+}
+
+/* 플레이리스트 목록 */
+
+.playlist-content-container {
+  width: 100%;
+  min-width: 1024px;
+  margin-top: 30px;
+  color: #dedede;
+}
+
+.playlist-actions {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 30px;
+}
+
+.playlist-actions-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.play-btn img {
+  width: 90px;
+  height: 90px;
+}
+
+.liked-btn img,
+.download-btn img {
+  width: 40px;
+  height: 40px;
+}
+
+.playlist-sort {
+  display: flex;
+}
+
+.playlist-sort .sort-icon {
+  width: 16px;
+  height: 16px;
+}
+
 .playlist-header,
 .track-row {
   display: grid;
-  grid-template-columns: 40px 1fr 40px 80px;
+  grid-template-columns: 40px 1fr 80px 80px;
   align-items: center;
+  padding: 20px 20px;
+}
+
+.playlist-header {
+  border-bottom: 1px solid #666;
+}
+
+.track-info {
+  display: flex;
+}
+
+.track-info .track-cover {
+  width: 52px;
+  height: 52px;
+}
+
+.track-info .track-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 20px;
+}
+
+.track-text .track-title {
+  color: white;
 }
