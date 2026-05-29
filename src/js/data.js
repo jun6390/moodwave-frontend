@@ -11,13 +11,13 @@ export const navItems = [
     href: "#",
   },
   {
-    label: "Search",
-    icon: "Search_S.svg",
+    label: "Weather Vibes",
+    icon: "weather.svg",
     href: "#",
   },
   {
-    label: "Your Library",
-    icon: "Library_S.svg",
+    label: "Your Status",
+    icon: "status.svg",
     href: "#",
   },
 ];

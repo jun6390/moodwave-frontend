@@ -1,9 +1,17 @@
-import {
-  ICON_PATH,
-  midMixes,
-  popularPlaylists,
-  latestPlaylists,
-} from "../data.js";
+import { ICON_PATH } from "../data.js";
+
+// =========================
+// 홈 데이터 요청 함수
+// =========================
+async function getHomeData() {
+  const response = await fetch("http://localhost:8080/api/home");
+
+  if (!response.ok) {
+    throw new Error("홈 데이터 요청 실패");
+  }
+
+  return response.json();
+}
 
 // =========================
 // 홈 HTML 렌더링 함수
@@ -39,10 +47,18 @@ export function renderHome() {
 // =========================
 function createMidMixCard(item) {
   return `
-    <article class="mid-mix">
+    <article
+      class="mid-mix"
+      data-play-track
+      data-id="${item.id || ""}"
+      data-uri="${item.uri || ""}"
+      data-title="${item.title || ""}"
+      data-artist="${item.artist || item.description || ""}"
+      data-cover="${item.cover || item.imageUrl || ""}"
+    >
       <img
         class="mid-mix__cover"
-        src="${item.cover}"
+        src="${item.cover || item.imageUrl || ""}"
         width="82"
         height="82"
         alt=""
@@ -65,13 +81,13 @@ function createMidMixCard(item) {
 // =========================
 // 중간 믹스 렌더링 함수
 // =========================
-function renderMidMixes() {
+function renderMidMixes(data) {
   const midMixesElement = document.querySelector("#midMixes");
   const rowSize = 3;
   let html = "";
 
-  for (let i = 0; i < midMixes.length; i += rowSize) {
-    const rowItems = midMixes.slice(i, i + rowSize);
+  for (let i = 0; i < data.length; i += rowSize) {
+    const rowItems = data.slice(i, i + rowSize);
 
     html += `
       <div class="mid-mixes__row">
@@ -88,11 +104,19 @@ function renderMidMixes() {
 // =========================
 function createGridCard(item) {
   return `
-    <article class="grid-card">
+    <article
+      class="grid-card"
+      data-play-track
+      data-id="${item.id || ""}"
+      data-uri="${item.uri || ""}"
+      data-title="${item.title || ""}"
+      data-artist="${item.artist || item.description || ""}"
+      data-cover="${item.cover || item.imageUrl || ""}"
+    >
       <div class="grid-card__art-wrap">
         <img
           class="grid-card__art"
-          src="${item.cover}"
+          src="${item.cover || item.imageUrl || ""}"
           width="182"
           height="182"
           alt=""
@@ -110,7 +134,7 @@ function createGridCard(item) {
 
       <div class="grid-card__info">
         <span class="grid-card__name">${item.title}</span>
-        <span class="grid-card__desc">${item.description}</span>
+        <span class="grid-card__desc">${item.artist || item.description || ""}</span>
       </div>
     </article>
   `;
@@ -129,15 +153,24 @@ function renderGrid(selector, data) {
 // 인사말 렌더링 함수
 // =========================
 function renderGreeting() {
-  document.querySelector("#greeting").textContent = "Hello Ureca";
+  document.querySelector("#greeting").textContent = "Ureca's Pick";
 }
 
 // =========================
 // 홈 초기 실행 함수
 // =========================
-export function initHome() {
-  renderGreeting();
-  renderMidMixes();
-  renderGrid("#popularGrid", popularPlaylists);
-  renderGrid("#latestGrid", latestPlaylists);
+export async function initHome() {
+  try {
+    renderGreeting();
+
+    const homeData = await getHomeData();
+
+    console.log("백엔드 홈 데이터:", homeData);
+
+    renderMidMixes(homeData.midMixes);
+    renderGrid("#popularGrid", homeData.popular);
+    renderGrid("#latestGrid", homeData.latest);
+  } catch (error) {
+    console.error(error);
+  }
 }
