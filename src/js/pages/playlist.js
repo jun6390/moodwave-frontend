@@ -1,4 +1,8 @@
 import { renderCommonLayout } from '../layout/commonLayout.js';
+import { weatherTracks } from '../data.js';
+
+const params = new URLSearchParams(window.location.search);
+const playlistType = params.get('playlist');
 
 // =========================
 // 초기 실행
@@ -11,99 +15,31 @@ function initWeatherPlaylist() {
 
 initWeatherPlaylist();
 
-// 더미데이터
-const tracks = [
-  {
-    id: 1,
-    title: 'Square (2017)',
-    artist: '백예린',
-    album: 'Every letter I sent you.',
-    duration: '04:31',
-  },
-  {
-    id: 2,
-    title: '밤편지',
-    artist: '아이유',
-    album: 'Palette',
-    duration: '04:12',
-  },
-  {
-    id: 3,
-    title: 'Everything',
-    artist: '검정치마',
-    album: 'TEAM BABY',
-    duration: '03:43',
-  },
-  {
-    id: 4,
-    title: 'From The Start',
-    artist: 'Laufey',
-    album: 'Bewitched',
-    duration: '02:49',
-  },
-  {
-    id: 5,
-    title: 'Slow Dancing in the Dark',
-    artist: 'Joji',
-    album: 'BALLADS 1',
-    duration: '03:29',
-  },
-  {
-    id: 6,
-    title: 'Cherry Wine',
-    artist: 'Hozier',
-    album: 'Hozier',
-    duration: '04:00',
-  },
-  {
-    id: 7,
-    title: 'Falling',
-    artist: 'Harry Styles',
-    album: 'Fine Line',
-    duration: '04:00',
-  },
-  {
-    id: 8,
-    title: 'Moon Song',
-    artist: 'Phoebe Bridgers',
-    album: 'Punisher',
-    duration: '04:37',
-  },
-  {
-    id: 9,
-    title: 'Softly',
-    artist: 'Clairo',
-    album: 'Charm',
-    duration: '03:12',
-  },
-  {
-    id: 10,
-    title: 'Ocean Eyes',
-    artist: 'Billie Eilish',
-    album: 'Dont Smile at Me',
-    duration: '03:20',
-  },
-];
-
 const playlistList = document.querySelector('.playlist-list');
+const tracks = (weatherTracks[playlistType] || []).slice(0, 10);
 
 renderTracks(tracks);
 
-function renderTracks() {
+function renderTracks(trackList) {
   playlistList.innerHTML = '';
 
-  tracks.forEach((tracks) => {
+  trackList.forEach((track) => {
     const trackRow = document.createElement('article');
 
     trackRow.className = 'track-row';
 
+    trackRow.dataset.playTrack = '';
+    trackRow.dataset.title = track.title;
+    trackRow.dataset.artist = track.artist;
+    trackRow.dataset.cover = track.cover;
+
     trackRow.innerHTML = `
-        <div class="track-number">${tracks.id}</div>
+        <div class="track-number">${track.id}</div>
       <div class="track-info">
-        <img src="${tracks.cover}" alt="" class="track-cover" />
+        <img src="${track.cover}" alt="" class="track-cover" />
         <div class="track-text">
-          <p class="track-title">${tracks.title}</p>
-          <span class="track-artist">${tracks.artist}</span>
+          <p class="track-title">${track.title}</p>
+          <span class="track-artist">${track.artist}</span>
         </div>
       </div>
 
@@ -111,7 +47,7 @@ function renderTracks() {
         <img src="/assets/icon/Heart_XS.svg" alt="" class="btn-liked" />
       </button>
 
-      <div class="track-time">${tracks.duration}</div>
+      <div class="track-time">${track.duration}</div>
     `;
 
     playlistList.append(trackRow);

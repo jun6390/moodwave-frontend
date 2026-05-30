@@ -1,5 +1,4 @@
 import { renderCommonLayout } from '../layout/commonLayout.js';
-// import axios from 'axois';
 
 const BASE_URL = '';
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
@@ -25,7 +24,6 @@ const playlistMap = {
     desc: '차분하게 하루를 정리하고 싶을 때',
     image: '/assets/img/rainy-2.jpg',
     icon: '/assets/icon/rainy.svg',
-    page: '/pages/playlist.html?playlist=rainy',
   },
 
   Clouds: {
@@ -36,7 +34,6 @@ const playlistMap = {
     desc: '흐린 하늘 아래 생각에 잠기고 싶은 순간',
     image: '/assets/img/cloudy.jpg',
     icon: '/assets/icon/cloudy.svg',
-    page: '/pages/playlist.html?playlist=cloudy',
   },
 
   Clear: {
@@ -47,7 +44,6 @@ const playlistMap = {
     desc: '햇살 가득한 오후를 더 밝게 만들 음악',
     image: '/assets/img/sunny-4.jpg',
     icon: '/assets/icon/sunny.svg',
-    page: '/pages/playlist.html?playlist=sunny',
   },
 
   Snow: {
@@ -58,7 +54,6 @@ const playlistMap = {
     desc: '포근한 겨울 감성에 어울리는 플레이리스트',
     image: '/assets/img/snowy-3.jpg',
     icon: '/assets/icon/snowy.svg',
-    page: '/pages/playlist.html?playlist=snowy',
   },
 
   Thunderstorm: {
@@ -69,7 +64,6 @@ const playlistMap = {
     desc: '거센 빗소리 속 몰입하고 싶은 밤',
     image: '/assets/img/stormy.jpg',
     icon: '/assets/icon/stormy.svg',
-    page: '/pages/playlist.html?playlist=stormy',
   },
 
   Foggy: {
@@ -80,7 +74,6 @@ const playlistMap = {
     desc: '몽환적인 새벽 공기와 어울리는 사운드',
     image: '/assets/img/foggy.jpg',
     icon: '/assets/icon/foggy.svg',
-    page: '/pages/playlist.html?playlist=foggy',
   },
 };
 
@@ -155,12 +148,14 @@ function updatePlaylist(weather) {
 
   if (!playlist) return;
 
+  const featuredCard = document.querySelector('.featured-card');
+
   playlistTag.textContent = playlist.tag;
   playlistTitle.textContent = playlist.title;
   playlistGenre.textContent = playlist.genre;
   playlistDesc.textContent = playlist.desc;
   playlistAlbum.style.backgroundImage = `url(${playlist.image})`;
-  featuredCard.href = playlist.page;
+  featuredCard.href = `/pages/playlist.html?playlist=${weather}`;
 }
 
 function renderWeatherCards(currentWeather) {
@@ -171,7 +166,8 @@ function renderWeatherCards(currentWeather) {
 
     const card = document.createElement('a');
     card.className = 'weather-card';
-    card.href = playlist.page;
+    card.href = `/pages/playlist.html?playlist=${weather}`;
+
     card.innerHTML = `
   <img class="other-weather-img" src="${playlist.image}" alt="${playlist.title}"/>
   <div class="weather-card-content">
