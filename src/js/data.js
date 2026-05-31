@@ -40,6 +40,7 @@ export const playlistMenuItems = [
   {
     label: "Liked Songs",
     icon: "Liked Songs_S.svg",
+    href: "/pages/liked.html",
   },
 ];
 
