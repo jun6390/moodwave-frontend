@@ -7,6 +7,7 @@ import { renderSearch, initSearch } from "./pages/search.js";
 import { renderLatestPage, initLatestPage } from "./pages/latest.js";
 import { renderPlaylistPage, initPlaylistPage } from "./pages/playlist.js";
 import { renderPopularPage, initPopularPage } from "./pages/popular.js";
+import { renderEmotion, initEmotion } from "./pages/emotion.js";
 
 import { isLoggedIn } from "./utils/auth.js";
 import { initToast } from "./utils/toast.js";
@@ -14,7 +15,13 @@ import { initToast } from "./utils/toast.js";
 // =========================
 // 로그인이 필요한 페이지 목록
 // =========================
-const protectedRoutes = ["#/search", "#/latest", "#/popular", "#/playlist"];
+const protectedRoutes = [
+  "#/search",
+  "#/latest",
+  "#/popular",
+  "#/playlist",
+  "#/emotion",
+];
 
 // =========================
 // 보호 페이지 여부 확인 함수
@@ -68,6 +75,13 @@ async function router() {
   if (hash.startsWith("#/playlist")) {
     main.innerHTML = renderPlaylistPage();
     initPlaylistPage();
+    return;
+  }
+
+  // 감정 추천 페이지
+  if (hash.startsWith("#/emotion")) {
+    main.innerHTML = renderEmotion();
+    initEmotion();
     return;
   }
 
