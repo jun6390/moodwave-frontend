@@ -1,6 +1,7 @@
 .playlist-main {
   padding: 30px clamp(20px, 3vw, 41px) 50px;
   overflow-y: auto;
+  background: linear-gradient(180deg, #3333a3 0%, #121212 33%);
 }
 
 /* 플레이리스트 히어로 섹션 */
@@ -45,7 +46,7 @@
   color: #b3b3b3;
 }
 
-.playlist-info .playlist-meta {
+.playlist-info .playlist-genre {
   margin-top: 8px;
   font-size: 16px;
   color: #b3b3b3;
@@ -131,6 +132,8 @@
 
 .track-text .track-title {
   color: white;
+}
+
 /* =========================
    Playlist 페이지
 ========================= */

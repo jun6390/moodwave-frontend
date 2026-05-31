@@ -3,10 +3,35 @@ import { loadPlaylistNames, loadPlaylistTrackMap, removeTrackFromPlaylist } from
 import { showConfirm } from '../utils/confirm.js';
 
 import { renderCommonLayout } from '../layout/commonLayout.js';
-import { weatherTracks } from '../data.js';
+import { playlistMap, weatherTracks } from '../data.js';
 
 const params = new URLSearchParams(window.location.search);
 const playlistType = params.get('playlist');
+
+// 히어로 섹션
+
+function renderPlaylistHero() {
+  const playlist = playlistMap[playlistType];
+  const playlistCover = document.querySelector('.playlist-cover');
+  const playlistTitle = document.querySelector('.playlist-title');
+  const playlistDesc = document.querySelector('.playlist-desc');
+  const playlistGenre = document.querySelector('.playlist-genre');
+  const playlistLabel = document.querySelector('.section-label');
+
+  if (!playlist) return;
+
+  playlistTitle.textContent = playlist.title;
+  playlistDesc.textContent = playlist.description;
+  playlistGenre.textContent = playlist.genre;
+  playlistLabel.textContent = playlist.label;
+
+  playlistCover.style.backgroundImage = `url(${playlist.cover})`;
+
+  playlistCover.style.backgroundSize = 'cover';
+  playlistCover.style.backgroundPosition = 'center';
+}
+
+renderPlaylistHero();
 
 // =========================
 // 현재 hash에서 플레이리스트 이름 가져오기
