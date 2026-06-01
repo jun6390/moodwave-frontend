@@ -1,7 +1,8 @@
 // =========================
 // API 기본 설정
 // =========================
-export const API_BASE_URL = "http://127.0.0.1:8080";
+export const API_BASE_URL =
+  "https://movewave-backend-production.up.railway.app";
 
 // =========================
 // 개별 API URL
