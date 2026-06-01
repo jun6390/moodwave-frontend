@@ -8,6 +8,7 @@ import { renderLatestPage, initLatestPage } from "./pages/latest.js";
 import { renderPlaylistPage, initPlaylistPage } from "./pages/playlist.js";
 import { renderPopularPage, initPopularPage } from "./pages/popular.js";
 import { renderEmotion, initEmotion } from "./pages/emotion.js";
+import { renderLikedPage, initLikedPage } from "./pages/liked.js";
 
 import { isLoggedIn } from "./utils/auth.js";
 import { initToast } from "./utils/toast.js";
@@ -21,6 +22,7 @@ const protectedRoutes = [
   "#/popular",
   "#/playlist",
   "#/emotion",
+  "#/liked",
 ];
 
 // =========================
@@ -82,6 +84,13 @@ async function router() {
   if (hash.startsWith("#/emotion")) {
     main.innerHTML = renderEmotion();
     initEmotion();
+    return;
+  }
+
+  // 좋아요 페이지
+  if (hash.startsWith("#/liked")) {
+    main.innerHTML = renderLikedPage();
+    initLikedPage();
     return;
   }
 
