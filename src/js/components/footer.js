@@ -1386,6 +1386,7 @@ function initFooterEvents() {
         if (response.ok) {
           alert("좋아요가 반영되었습니다.");
           // 필요시 버튼 아이콘을 Heart_Fill에서 Heart_Outline 등으로 교체하는 로직 추가
+          isLiked();
         } else {
           alert("좋아요 처리에 실패했습니다.");
         }
