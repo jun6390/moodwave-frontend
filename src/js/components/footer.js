@@ -34,6 +34,7 @@ let hasStartedPlayback = false;
 let isTrackCardEventBound = false;
 let isPlayerPopoverEventBound = false;
 let currentTrackId = null;
+let currentTrackInfo = null;
 
 let isShuffleOn = false;
 let repeatMode = "off";
@@ -1069,8 +1070,16 @@ function createSpotifyPlayer() {
   spotifyPlayer.addListener("player_state_changed", (state) => {
     if (!state) return;
 
-    currentTrackId = state.track_window.current_track.id;
+    const currentTrack = state.track_window.current_track;
+    currentTrackId = currentTrack.id;
 
+    currentTrackInfo = {
+      musicId: currentTrack.id,
+      title: currentTrack.name,
+      artist: currentTrack.artists?.map((a) => a.name).join(", "),
+      albumImage: currentTrack.album?.images?.[0]?.url || "",
+      duration: state.duration,
+    };
     isLiked();
     isPlaying = !state.paused;
     updatePlayButtonIcon();
@@ -1379,7 +1388,7 @@ function initFooterEvents() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ musicId: currentTrackId }),
+          body: JSON.stringify(currentTrackInfo),
           credentials: "include", // 세션 유지를 위해 필수
         });
 
