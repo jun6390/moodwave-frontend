@@ -588,3 +588,12 @@ export function initSongTablePage({
     activeObserver.observe(observerTarget);
   }
 }
+
+// =========================
+// 일반 테이블 이벤트 초기화 함수
+// renderSongTable()만 사용하는 페이지에서 사용
+// =========================
+export function initSongTable() {
+  renderAddPlaylistModal();
+  initSongTableEvents();
+}
