@@ -32,7 +32,14 @@ function renderWeatherTracks() {
   const playlistList = document.querySelector('.playlist-list');
   const tracks = weatherTracks[playlistType];
 
-  if (!playlistList || !tracks) return;
+  if (!playlistList || !tracks) {
+    playlistList.innerHTML = `
+      <div class="empty-state">
+        아직 추천된 곡이 없습니다.  
+      </div>   
+    
+    `;
+  }
 
   playlistList.innerHTML = tracks
     .map(
