@@ -3,7 +3,7 @@ import {
   initSongTablePage,
 } from "../components/songTable.js";
 
-import { API_BASE_URL } from "../config/api.js";
+import { API_BASE_URL } from "../api/api.js";
 
 // =========================
 // Popular 페이지 설정

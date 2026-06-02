@@ -1,5 +1,5 @@
-import { ICON_PATH } from "../data.js";
-import { API_ENDPOINTS } from "../config/api.js";
+import { ICON_PATH } from "../../../data.js";
+import { API_ENDPOINTS } from "../api/api.js";
 
 const URECA_PICK_LIMIT = 6;
 const HOME_SECTION_LIMIT = 5;

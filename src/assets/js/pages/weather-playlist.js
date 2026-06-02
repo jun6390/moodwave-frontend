@@ -1,5 +1,5 @@
 import { renderSongTable, initSongTable } from "../components/songTable.js";
-import { playlistMap, weatherTracks } from "../data.js";
+import { playlistMap, weatherTracks } from "../../../data.js";
 
 // =========================
 // Weather Playlist 페이지 HTML 렌더링

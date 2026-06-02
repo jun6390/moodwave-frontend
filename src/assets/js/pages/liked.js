@@ -1,6 +1,6 @@
 import { isLiked } from "../components/footer.js";
 import { renderSongTable } from "../components/songTable.js";
-import { LIKE_API_URL } from "../config/api.js";
+import { LIKE_API_URL } from "../api/api.js";
 
 // =========================
 // 좋아요 페이지 HTML 렌더링

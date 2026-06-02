@@ -1,5 +1,5 @@
-import { ICON_PATH } from "../data.js";
-import { HOME_API_URL } from "../config/api.js";
+import { ICON_PATH } from "../../../data.js";
+import { HOME_API_URL } from "../api/api.js";
 import { escapeHTML } from "../utils/escapeHTML.js";
 
 // =========================

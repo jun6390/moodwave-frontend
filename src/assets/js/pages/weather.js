@@ -1,4 +1,4 @@
-import { playlistMap } from "../data.js";
+import { playlistMap } from "../../../data.js";
 import {
   renderLoading,
   setLoading,

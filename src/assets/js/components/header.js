@@ -1,5 +1,5 @@
-import { user } from "../data.js";
-import { API_ENDPOINTS } from "../config/api.js";
+import { user } from "../../../data.js";
+import { API_ENDPOINTS } from "../api/api.js";
 import { escapeHTML } from "../utils/escapeHTML.js";
 
 const SPOTIFY_LOGO_URL =

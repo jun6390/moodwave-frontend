@@ -1,23 +1,32 @@
-import { renderSidebar, initSidebar } from "./components/sidebar.js";
-import { renderHeader, initHeader } from "./components/header.js";
-import { renderFooter, initFooter } from "./components/footer.js";
+import { renderSidebar, initSidebar } from "./assets/js/components/sidebar.js";
+import { renderHeader, initHeader } from "./assets/js/components/header.js";
+import { renderFooter, initFooter } from "./assets/js/components/footer.js";
 
-import { renderHome, initHome } from "./pages/home.js";
-import { renderSearch, initSearch } from "./pages/search.js";
-import { renderLatestPage, initLatestPage } from "./pages/latest.js";
-import { renderPlaylistPage, initPlaylistPage } from "./pages/playlist.js";
-import { renderPopularPage, initPopularPage } from "./pages/popular.js";
-import { renderEmotion, initEmotion } from "./pages/emotion.js";
-import { renderLikedPage, initLikedPage } from "./pages/liked.js";
-import { renderWeatherPage, initWeatherPage } from "./pages/weather.js";
-import { renderChartPage, initChartPage } from "./pages/chart.js";
+import { renderHome, initHome } from "./assets/js/pages/home.js";
+import { renderSearch, initSearch } from "./assets/js/pages/search.js";
+import { renderLatestPage, initLatestPage } from "./assets/js/pages/latest.js";
+import {
+  renderPlaylistPage,
+  initPlaylistPage,
+} from "./assets/js/pages/playlist.js";
+import {
+  renderPopularPage,
+  initPopularPage,
+} from "./assets/js/pages/popular.js";
+import { renderEmotion, initEmotion } from "./assets/js/pages/emotion.js";
+import { renderLikedPage, initLikedPage } from "./assets/js/pages/liked.js";
+import {
+  renderWeatherPage,
+  initWeatherPage,
+} from "./assets/js/pages/weather.js";
+import { renderChartPage, initChartPage } from "./assets/js/pages/chart.js";
 import {
   renderWeatherPlaylistPage,
   initWeatherPlaylistPage,
-} from "./pages/weather-playlist.js";
+} from "./assets/js/pages/weather-playlist.js";
 
-import { isLoggedIn } from "./utils/auth.js";
-import { initToast } from "./utils/toast.js";
+import { isLoggedIn } from "./assets/js/utils/auth.js";
+import { initToast } from "./assets/js/utils/toast.js";
 
 // =========================
 // 페이지 라우트 목록

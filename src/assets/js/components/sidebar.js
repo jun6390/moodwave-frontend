@@ -1,4 +1,4 @@
-import { ICON_PATH, navItems, playlistMenuItems } from "../data.js";
+import { ICON_PATH, navItems, playlistMenuItems } from "../../../data.js";
 import { isLoggedIn, requireLogin } from "../utils/auth.js";
 import {
   deletePlaylistTracks,

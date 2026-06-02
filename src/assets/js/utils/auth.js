@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "../config/api.js";
+import { API_BASE_URL } from "../api/api.js";
 
 // =========================
 // 유효한 로그인 사용자 여부 확인 함수

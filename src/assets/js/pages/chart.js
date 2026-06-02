@@ -1,4 +1,4 @@
-import { API_ENDPOINTS } from "../config/api.js";
+import { API_ENDPOINTS } from "../api/api.js";
 import { renderSongTable, initSongTable } from "../components/songTable.js";
 
 // =========================

@@ -3,7 +3,7 @@ import {
   IS_LIKE_API_URL,
   HOME_SEARCH_API_URL,
   SPOTIFY_ACCESS_TOKEN_API_URL,
-} from "../config/api.js";
+} from "../api/api.js";
 
 // =========================
 // 초기 푸터 상태

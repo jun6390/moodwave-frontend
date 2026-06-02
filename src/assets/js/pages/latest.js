@@ -3,7 +3,7 @@ import {
   initSongTablePage,
 } from "../components/songTable.js";
 
-import { API_ENDPOINTS } from "../config/api.js";
+import { API_ENDPOINTS } from "../api/api.js";
 
 // =========================
 // Latest 페이지 HTML 렌더링 함수
