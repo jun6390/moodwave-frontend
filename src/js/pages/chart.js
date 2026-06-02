@@ -46,6 +46,25 @@ const artistGenreMap = {
   kinoshita: "J-pop",
 };
 
+const demoWeatherList = [
+  "Sunny",
+  "Sunny",
+  "Sunny",
+  "Sunny",
+  "Sunny",
+  "Sunny",
+  "Cloudy",
+  "Cloudy",
+  "Cloudy",
+  "Rainy",
+  "Rainy",
+  "Clear",
+  "Snowy",
+];
+
+let genreChartInstance = null;
+let weatherChartInstance = null;
+
 // =========================
 // 차트 페이지 HTML 렌더링
 // =========================
@@ -79,9 +98,9 @@ export function renderChartPage() {
 
       <section class="song-table-page chart-recommend-section">
         <div class="song-table-page__header">
-          <h2 class="song-table-page__title">날씨 기반 추천곡</h2>
+          <h2 class="song-table-page__title">통계 기반 추천곡</h2>
           <p class="song-table-page__desc">
-            가장 많이 감상한 날씨와 어울리는 곡을 추천해드려요.
+            가장 많이 감상하신 장르의 인기곡을 추천해드려요.
           </p>
         </div>
 
@@ -106,23 +125,16 @@ export async function initChartPage() {
 
     const apiData = await response.json();
 
-    const data = apiData.map((song) => ({
-      ...song,
-      genre: song.genre || artistGenreMap[song.artist] || "Etc",
-      weather: song.weather || "Unknown",
-    }));
+    const data = apiData.map((song, index) => normalizeChartData(song, index));
 
     const topGenres = getTopDataByField(data, "genre");
     const topWeather = getTopDataByField(data, "weather");
 
-    const mostListenedWeather = topWeather[0]?.[0];
+    const mostListenedGenre = topGenres[0]?.[0];
 
     const recommendedSongs = data
-      .filter(
-        (song) =>
-          normalizeText(song?.weather, "Unknown") === mostListenedWeather,
-      )
-      .slice(0, 5)
+      .filter((song) => song.genre === mostListenedGenre)
+      .slice(0, 10)
       .map(normalizeSongData);
 
     renderGenreChart(topGenres);
@@ -154,10 +166,93 @@ export async function initChartPage() {
 }
 
 // =========================
+// 차트용 데이터 정리
+// =========================
+function normalizeChartData(song, index) {
+  const artist = normalizeText(
+    song?.artist || song?.artistName || song?.artists?.[0]?.name,
+    "Unknown Artist",
+  );
+
+  const genre = normalizeText(
+    song?.genre || song?.genres?.[0] || artistGenreMap[artist],
+    "Etc",
+  );
+
+  const weather = normalizeText(
+    song?.weather || song?.weatherType || song?.weatherName,
+    demoWeatherList[index % demoWeatherList.length],
+  );
+
+  const releaseDate = normalizeText(
+    song?.releaseDate || song?.release_date || song?.album?.release_date,
+    "-",
+  );
+
+  return {
+    ...song,
+    artist,
+    genre,
+    weather,
+    releaseDate,
+  };
+}
+
+// =========================
+// songTable.js에 맞게 데이터 정리
+// =========================
+function normalizeSongData(song) {
+  const artist = normalizeText(
+    song?.artist || song?.artistName || song?.artists?.[0]?.name,
+    "Unknown Artist",
+  );
+
+  const cover =
+    song?.cover ||
+    song?.imageUrl ||
+    song?.albumImage ||
+    song?.albumCover ||
+    song?.album?.images?.[0]?.url ||
+    "";
+
+  const releaseDate = normalizeText(
+    song?.releaseDate || song?.release_date || song?.album?.release_date,
+    "-",
+  );
+
+  const durationMs = song?.durationMs || song?.duration_ms || 0;
+
+  return {
+    id: song?.id,
+    musicId: song?.id,
+    trackId: song?.id,
+    spotifyId: song?.id,
+
+    title: normalizeText(song?.title || song?.name, "Unknown Title"),
+    artist,
+    artistName: artist,
+    description: artist,
+
+    cover,
+    imageUrl: cover,
+    albumCover: cover,
+    albumImage: cover,
+
+    releaseDate,
+    weather: normalizeText(song?.weather, "-"),
+    genre: normalizeText(song?.genre, "Etc"),
+
+    durationMs,
+    duration: song?.duration || song?.durationText,
+    uri: song?.uri || `spotify:track:${song?.id}`,
+  };
+}
+
+// =========================
 // 공통 유틸 함수
 // =========================
 function normalizeText(value, fallback = "") {
-  return typeof value === "string" && value.trim() ? value : fallback;
+  return typeof value === "string" && value.trim() ? value.trim() : fallback;
 }
 
 function getTopDataByField(dataArray, field) {
@@ -174,38 +269,6 @@ function getTopDataByField(dataArray, field) {
 }
 
 // =========================
-// songTable.js에 맞게 데이터 정리
-// =========================
-function normalizeSongData(song) {
-  const artist = normalizeText(song?.artist, "Unknown Artist");
-  const cover = song?.cover || song?.imageUrl || song?.albumImage || "";
-
-  return {
-    id: song?.id,
-    musicId: song?.id,
-    trackId: song?.id,
-    spotifyId: song?.id,
-
-    title: normalizeText(song?.title, "Unknown Title"),
-    artist,
-    artistName: artist,
-    description: artist,
-
-    cover,
-    imageUrl: cover,
-    albumCover: cover,
-    albumImage: cover,
-
-    releaseDate: normalizeText(song?.weather, "-"),
-    weather: normalizeText(song?.weather, "-"),
-    genre: normalizeText(song?.genre, "Etc"),
-
-    durationMs: song?.durationMs ?? 0,
-    uri: song?.uri || `spotify:track:${song?.id}`,
-  };
-}
-
-// =========================
 // 장르 차트 렌더링
 // =========================
 function renderGenreChart(topGenres) {
@@ -213,6 +276,10 @@ function renderGenreChart(topGenres) {
 
   if (!genreCanvas || typeof Chart === "undefined") {
     return;
+  }
+
+  if (genreChartInstance) {
+    genreChartInstance.destroy();
   }
 
   const genreCtx = genreCanvas.getContext("2d");
@@ -247,7 +314,7 @@ function renderGenreChart(topGenres) {
     },
   };
 
-  new Chart(genreCtx, {
+  genreChartInstance = new Chart(genreCtx, {
     type: "doughnut",
     data: {
       labels: topGenres.map(([label]) => label),
@@ -267,6 +334,8 @@ function renderGenreChart(topGenres) {
       ],
     },
     options: {
+      responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
         tooltip: { enabled: true },
@@ -287,9 +356,13 @@ function renderWeatherChart(topWeather) {
     return;
   }
 
+  if (weatherChartInstance) {
+    weatherChartInstance.destroy();
+  }
+
   const weatherCtx = weatherCanvas.getContext("2d");
 
-  new Chart(weatherCtx, {
+  weatherChartInstance = new Chart(weatherCtx, {
     type: "bar",
     data: {
       labels: topWeather.map(([label]) => label),
@@ -310,13 +383,17 @@ function renderWeatherChart(topWeather) {
       ],
     },
     options: {
+      responsive: true,
+      maintainAspectRatio: false,
       indexAxis: "y",
       plugins: {
         legend: { display: false },
+        tooltip: { enabled: true },
       },
       scales: {
         x: {
           display: false,
+          beginAtZero: true,
         },
         y: {
           grid: { display: false },
