@@ -49,6 +49,11 @@ let currentTrackId = null;
 let currentTrackInfo = null;
 let coverImageLoadId = 0;
 
+let isTrackUiLockedByCardClick = false;
+let lockedCardTrackTitle = "";
+let lockedCardTrackArtist = "";
+let lockedCardTrackUri = "";
+
 let pendingTrackId = null;
 let pendingTrackStartedAt = 0;
 const PENDING_TRACK_LOCK_MS = 4000;
@@ -265,6 +270,76 @@ function clearPendingTrack() {
 }
 
 // =========================
+// 카드 클릭으로 변경한 곡 UI 잠금
+// =========================
+function lockTrackUIByCardClick(track, uri) {
+  isTrackUiLockedByCardClick = true;
+  lockedCardTrackTitle = track.title || track.name || "";
+  lockedCardTrackArtist = track.artist || "";
+  lockedCardTrackUri = uri || track.uri || "";
+}
+
+// =========================
+// 카드 클릭 UI 잠금 해제
+// =========================
+function unlockTrackUIByCardClick() {
+  isTrackUiLockedByCardClick = false;
+  lockedCardTrackTitle = "";
+  lockedCardTrackArtist = "";
+  lockedCardTrackUri = "";
+}
+
+// =========================
+// 곡 제목 비교용 문자열 정규화
+// =========================
+function normalizeTrackText(value = "") {
+  return String(value)
+    .toLowerCase()
+    .replace(/[\s\-_()[\].,]/g, "");
+}
+
+// =========================
+// 현재 Spotify 상태가 카드 클릭으로 잠근 곡인지 확인
+// =========================
+function isSameLockedCardTrack(spotifyTrack) {
+  if (!isTrackUiLockedByCardClick || !spotifyTrack) return false;
+
+  const spotifyTitle = normalizeTrackText(spotifyTrack.name || "");
+  const lockedTitle = normalizeTrackText(lockedCardTrackTitle);
+  const spotifyUri = spotifyTrack.uri || "";
+  const spotifyArtist =
+    spotifyTrack.artists?.map((artist) => artist.name).join(", ") || "";
+  const normalizedSpotifyArtist = normalizeTrackText(spotifyArtist);
+  const normalizedLockedArtist = normalizeTrackText(lockedCardTrackArtist);
+
+  if (lockedCardTrackUri && spotifyUri && lockedCardTrackUri === spotifyUri) {
+    return true;
+  }
+
+  if (!spotifyTitle || !lockedTitle) {
+    return false;
+  }
+
+  const isSimilarTitle =
+    spotifyTitle === lockedTitle ||
+    spotifyTitle.includes(lockedTitle) ||
+    lockedTitle.includes(spotifyTitle);
+
+  if (!isSimilarTitle) {
+    return false;
+  }
+
+  if (!normalizedLockedArtist || !normalizedSpotifyArtist) {
+    return true;
+  }
+
+  return (
+    normalizedSpotifyArtist.includes(normalizedLockedArtist) ||
+    normalizedLockedArtist.includes(normalizedSpotifyArtist)
+  );
+}
+
+// =========================
 // 새 곡으로 바뀌는 중인지 확인
 // =========================
 function isWaitingForPendingTrack(spotifyTrackId) {
@@ -284,6 +359,15 @@ function isWaitingForPendingTrack(spotifyTrackId) {
 // 현재 화면의 재생 가능한 곡 목록 가져오기
 // =========================
 function getCurrentPageTrackQueue(clickedTrack) {
+  const clickedUri = getPlayableTrackUri(clickedTrack);
+
+  if (!clickedUri) {
+    return {
+      uris: [],
+      startIndex: 0,
+    };
+  }
+
   const trackElements = document.querySelectorAll("[data-play-track]");
 
   const tracks = Array.from(trackElements).map((trackElement) => {
@@ -309,15 +393,20 @@ function getCurrentPageTrackQueue(clickedTrack) {
     })
     .filter(Boolean);
 
-  const clickedUri = getPlayableTrackUri(clickedTrack);
-
   const clickedIndex = playableTracks.findIndex((track) => {
     return track.uri === clickedUri;
   });
 
+  if (clickedIndex === -1) {
+    return {
+      uris: [clickedUri],
+      startIndex: 0,
+    };
+  }
+
   return {
     uris: playableTracks.map((track) => track.uri),
-    startIndex: clickedIndex >= 0 ? clickedIndex : 0,
+    startIndex: clickedIndex,
   };
 }
 
@@ -483,6 +572,8 @@ async function playTestTrack() {
     return;
   }
 
+  unlockTrackUIByCardClick();
+
   const response = await spotifyRequest(
     `https://api.spotify.com/v1/me/player/play?device_id=${spotifyDeviceId}`,
     {
@@ -543,6 +634,7 @@ async function playSelectedTrack(track) {
   }
 
   setPendingTrack(playableTrack, uri);
+  lockTrackUIByCardClick(playableTrack, uri);
   resetProgressForTrackChange();
 
   const currentTitle = document.querySelector("#currentTitle");
@@ -585,12 +677,25 @@ async function playSelectedTrack(track) {
     isPlaying = true;
     updatePlayButtonIcon();
 
+    window.setTimeout(() => {
+      syncSpotifyProgressOnly();
+    }, 500);
+
+    window.setTimeout(() => {
+      syncSpotifyProgressOnly();
+    }, 1200);
+
+    window.setTimeout(() => {
+      syncSpotifyProgressOnly();
+    }, 2500);
+
     console.log("선택한 곡 재생 성공:", playableTrack.title);
     console.log("현재 재생목록:", queue.uris);
     return;
   }
 
   clearPendingTrack();
+  unlockTrackUIByCardClick();
 
   const errorText = await response.text();
   console.error("선택한 곡 재생 실패:", response.status, errorText);
@@ -788,53 +893,28 @@ function updateCoverImage(nextSrc, nextAlt = "앨범 커버") {
 }
 
 // =========================
-// 곡 제목 비교용 문자열 정규화
-// =========================
-function normalizeTrackText(value = "") {
-  return String(value)
-    .toLowerCase()
-    .replace(/[\s\-_()[\].,]/g, "");
-}
-
-// =========================
 // 현재 재생곡 UI 업데이트
 // =========================
 function updateCurrentTrackUI(track) {
-  const currentCover = document.querySelector("#currentCover");
   const currentTitle = document.querySelector("#currentTitle");
   const currentArtist = document.querySelector("#currentArtist");
 
   if (!track) return;
 
-  const nextTitle = track.name || "";
-  const nextArtist =
-    track.artists?.map((artist) => artist.name).join(", ") || "";
-
-  const currentTitleText = currentTitle?.textContent || "";
-
-  const isSameDisplayedTrack =
-    normalizeTrackText(currentTitleText) === normalizeTrackText(nextTitle);
-
   setFooterEmptyState(false);
 
-  // 핵심:
-  // 이미 화면에 같은 곡 제목이 표시되어 있으면 커버 이미지는 다시 바꾸지 않음
-  // 그래야 클릭 직후 커버가 Spotify SDK 상태 업데이트로 다시 깜빡이지 않음
-  if (!isSameDisplayedTrack) {
-    updateCoverImage(
-      track.album?.images?.[0]?.url || EMPTY_TRACK.cover,
-      `${nextTitle} 앨범 커버`,
-    );
-  } else if (currentCover) {
-    currentCover.alt = `${nextTitle} 앨범 커버`;
-  }
+  updateCoverImage(
+    track.album?.images?.[0]?.url || EMPTY_TRACK.cover,
+    `${track.name} 앨범 커버`,
+  );
 
   if (currentTitle) {
-    currentTitle.textContent = nextTitle;
+    currentTitle.textContent = track.name || "";
   }
 
   if (currentArtist) {
-    currentArtist.textContent = nextArtist;
+    currentArtist.textContent =
+      track.artists?.map((artist) => artist.name).join(", ") || "";
   }
 }
 
@@ -904,6 +984,57 @@ function updateProgressUI(position, duration) {
       : 0;
 
     progressBar.style.width = `${progress}%`;
+  }
+}
+
+// =========================
+// Spotify 현재 상태에서 진행바만 강제 동기화
+// 커버/제목은 절대 건드리지 않음
+// =========================
+async function syncSpotifyProgressOnly() {
+  if (!spotifyPlayer) return;
+
+  try {
+    const state = await spotifyPlayer.getCurrentState();
+
+    if (!state) return;
+
+    const currentTrack = state.track_window.current_track;
+
+    if (!currentTrack) return;
+
+    if (isTrackUiLockedByCardClick && !isSameLockedCardTrack(currentTrack)) {
+      console.log("아직 이전 곡 상태라 진행바 동기화 스킵:", currentTrack.name);
+      return;
+    }
+
+    clearPendingTrack();
+
+    currentTrackId = currentTrack.id;
+
+    currentTrackInfo = {
+      musicId: currentTrack.id,
+      title: currentTrack.name,
+      artist: currentTrack.artists?.map((a) => a.name).join(", "),
+      albumImage: currentTrack.album?.images?.[0]?.url || "",
+      duration: state.duration,
+    };
+
+    isPlaying = !state.paused;
+    updatePlayButtonIcon();
+    updateProgressUI(state.position, state.duration);
+
+    setTimeout(() => {
+      isLiked();
+    }, 100);
+
+    if (isPlaying) {
+      startProgressTimer();
+    } else {
+      stopProgressTimer();
+    }
+  } catch (error) {
+    console.error("Spotify 진행바 동기화 실패:", error);
   }
 }
 
@@ -1313,18 +1444,29 @@ function createSpotifyPlayer() {
 
     if (!currentTrack) return;
 
-    let shouldUpdateTrackUI = true;
+    const isLockedSameTrack = isSameLockedCardTrack(currentTrack);
+
+    if (isTrackUiLockedByCardClick && !isLockedSameTrack) {
+      if (isWaitingForPendingTrack(currentTrack.id)) {
+        console.log("카드 클릭 전환 중 이전 곡 상태 무시:", currentTrack.name);
+        return;
+      }
+
+      unlockTrackUIByCardClick();
+    }
 
     if (isWaitingForPendingTrack(currentTrack.id)) {
-      console.log(
-        "pendingTrackId와 실제 Spotify 트랙 ID가 다름. 진행바만 현재 상태로 동기화:",
-        currentTrack.name,
-      );
+      if (isLockedSameTrack) {
+        console.log(
+          "pendingTrackId는 다르지만 같은 곡으로 판단. 진행바만 동기화:",
+          currentTrack.name,
+        );
 
-      // 핵심:
-      // 이 케이스에서는 커버/제목을 다시 건드리면 깜빡임이 생김
-      shouldUpdateTrackUI = false;
-      clearPendingTrack();
+        clearPendingTrack();
+      } else {
+        console.log("이전 곡 상태 무시:", currentTrack.name);
+        return;
+      }
     }
 
     if (pendingTrackId && currentTrack.id === pendingTrackId) {
@@ -1344,7 +1486,7 @@ function createSpotifyPlayer() {
     isPlaying = !state.paused;
     updatePlayButtonIcon();
 
-    if (shouldUpdateTrackUI) {
+    if (!isTrackUiLockedByCardClick) {
       updateCurrentTrackUI(currentTrack);
     }
 
@@ -1708,6 +1850,7 @@ function initFooterEvents() {
     prevButton.addEventListener("click", async () => {
       if (!checkSpotifyPlayerReady()) return;
 
+      unlockTrackUIByCardClick();
       resetProgressForTrackChange();
 
       await spotifyPlayer.previousTrack();
@@ -1719,6 +1862,7 @@ function initFooterEvents() {
     nextButton.addEventListener("click", async () => {
       if (!checkSpotifyPlayerReady()) return;
 
+      unlockTrackUIByCardClick();
       resetProgressForTrackChange();
 
       await spotifyPlayer.nextTrack();
