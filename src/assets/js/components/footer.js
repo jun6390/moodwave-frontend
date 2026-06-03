@@ -543,6 +543,7 @@ async function playSelectedTrack(track) {
   }
 
   setPendingTrack(playableTrack, uri);
+  resetProgressForTrackChange();
 
   const currentTitle = document.querySelector("#currentTitle");
   const currentArtist = document.querySelector("#currentArtist");
@@ -823,6 +824,33 @@ function formatTime(ms) {
   const seconds = totalSeconds % 60;
 
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+// =========================
+// 곡 변경 시작 시 진행바 즉시 초기화
+// =========================
+function resetProgressForTrackChange() {
+  stopProgressTimer();
+
+  currentDuration = 0;
+  currentPosition = 0;
+  lastProgressUpdatedAt = Date.now();
+
+  const currentTime = document.querySelector("#currentTime");
+  const durationTime = document.querySelector("#durationTime");
+  const progressBar = document.querySelector("#progressBar");
+
+  if (currentTime) {
+    currentTime.textContent = "0:00";
+  }
+
+  if (durationTime) {
+    durationTime.textContent = "0:00";
+  }
+
+  if (progressBar) {
+    progressBar.style.width = "0%";
+  }
 }
 
 // =========================
@@ -1643,6 +1671,8 @@ function initFooterEvents() {
     prevButton.addEventListener("click", async () => {
       if (!checkSpotifyPlayerReady()) return;
 
+      resetProgressForTrackChange();
+
       await spotifyPlayer.previousTrack();
       console.log("이전 곡 이동");
     });
@@ -1651,6 +1681,8 @@ function initFooterEvents() {
   if (nextButton) {
     nextButton.addEventListener("click", async () => {
       if (!checkSpotifyPlayerReady()) return;
+
+      resetProgressForTrackChange();
 
       await spotifyPlayer.nextTrack();
       console.log("다음 곡 이동");
