@@ -1,8 +1,9 @@
 // =========================
 // API 기본 설정
 // =========================
-export const API_BASE_URL =
-  "https://movewave-backend-production.up.railway.app";
+// 배포 환경에서는 Vercel rewrites를 통해 백엔드로 프록시됨
+// 예: /api/home -> Railway 백엔드 /api/home
+export const API_BASE_URL = "";
 
 // =========================
 // 개별 API URL
