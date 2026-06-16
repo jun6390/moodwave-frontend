@@ -69,6 +69,46 @@ const demoWeatherList = [
 
 let genreChartInstance = null;
 let weatherChartInstance = null;
+let chartJsLoadPromise = null;
+
+const CHART_JS_URL = "https://cdn.jsdelivr.net/npm/chart.js";
+
+function loadChartJs() {
+  if (window.Chart) {
+    return Promise.resolve(window.Chart);
+  }
+
+  if (chartJsLoadPromise) {
+    return chartJsLoadPromise;
+  }
+
+  chartJsLoadPromise = new Promise((resolve, reject) => {
+    const existingScript = document.querySelector(
+      `script[src="${CHART_JS_URL}"]`,
+    );
+
+    if (existingScript) {
+      existingScript.addEventListener("load", () => resolve(window.Chart), {
+        once: true,
+      });
+      existingScript.addEventListener("error", reject, { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = CHART_JS_URL;
+    script.async = true;
+    script.onload = () => resolve(window.Chart);
+    script.onerror = () => {
+      chartJsLoadPromise = null;
+      reject(new Error("Chart.js 로딩 실패"));
+    };
+
+    document.head.append(script);
+  });
+
+  return chartJsLoadPromise;
+}
 
 // =========================
 // 차트 페이지 HTML 렌더링
@@ -158,6 +198,7 @@ export async function initChartPage() {
   setContentVisible("chartSongTable", false);
 
   try {
+    const chartJsPromise = loadChartJs();
     const response = await fetch(API_ENDPOINTS.music);
 
     if (!response.ok) {
@@ -180,6 +221,8 @@ export async function initChartPage() {
 
     setContentVisible("chartSkeleton", false);
     setContentVisible("chartDashboard", true);
+
+    await chartJsPromise;
 
     renderGenreChart(topGenres);
     renderWeatherChart(topWeather);
@@ -323,8 +366,9 @@ function getTopDataByField(dataArray, field) {
 // =========================
 function renderGenreChart(topGenres) {
   const genreCanvas = document.querySelector("#genreChart");
+  const ChartConstructor = window.Chart;
 
-  if (!genreCanvas || typeof Chart === "undefined") {
+  if (!genreCanvas || !ChartConstructor) {
     return;
   }
 
@@ -364,7 +408,7 @@ function renderGenreChart(topGenres) {
     },
   };
 
-  genreChartInstance = new Chart(genreCtx, {
+  genreChartInstance = new ChartConstructor(genreCtx, {
     type: "doughnut",
     data: {
       labels: topGenres.map(([label]) => label),
@@ -401,8 +445,9 @@ function renderGenreChart(topGenres) {
 // =========================
 function renderWeatherChart(topWeather) {
   const weatherCanvas = document.querySelector("#weatherChart");
+  const ChartConstructor = window.Chart;
 
-  if (!weatherCanvas || typeof Chart === "undefined") {
+  if (!weatherCanvas || !ChartConstructor) {
     return;
   }
 
@@ -412,7 +457,7 @@ function renderWeatherChart(topWeather) {
 
   const weatherCtx = weatherCanvas.getContext("2d");
 
-  weatherChartInstance = new Chart(weatherCtx, {
+  weatherChartInstance = new ChartConstructor(weatherCtx, {
     type: "bar",
     data: {
       labels: topWeather.map(([label]) => label),

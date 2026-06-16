@@ -2,6 +2,7 @@
   "name": "moodwave-fe",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "음악 스트리밍 개인화 추천 웹 서비스",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5173 --open",
