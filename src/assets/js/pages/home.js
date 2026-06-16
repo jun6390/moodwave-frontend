@@ -72,6 +72,8 @@ function createMidMixCard(item) {
         src="${cover}"
         width="82"
         height="82"
+        loading="lazy"
+        decoding="async"
         alt=""
       />
 
@@ -126,6 +128,8 @@ function createGridCard(item) {
           src="${cover}"
           width="182"
           height="182"
+          loading="lazy"
+          decoding="async"
           alt=""
         />
 

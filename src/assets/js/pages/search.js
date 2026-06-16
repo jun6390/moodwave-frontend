@@ -90,6 +90,8 @@ function createSearchCard(item) {
         <img 
           class="music-card__image" 
           src="${escapeHTML(cover)}" 
+          loading="lazy"
+          decoding="async"
           alt="${escapeHTML(title)}" 
         />
 

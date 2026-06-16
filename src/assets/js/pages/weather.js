@@ -328,6 +328,8 @@ export function initWeatherPage() {
         <img
           class="other-weather-img"
           src="${playlist.image}"
+          loading="lazy"
+          decoding="async"
           alt="${playlist.title}"
         />
 
