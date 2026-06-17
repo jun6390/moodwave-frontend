@@ -236,6 +236,8 @@ function createSongRow(item, index, options = {}) {
           <img
             class="song-info__cover"
             src="${escapeHTML(track.cover)}"
+            width="48"
+            height="48"
             loading="lazy"
             decoding="async"
             alt=""

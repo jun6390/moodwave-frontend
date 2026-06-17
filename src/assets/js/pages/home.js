@@ -53,9 +53,10 @@ export function renderHome() {
 // =========================
 // 중간 믹스 카드 생성 함수
 // =========================
-function createMidMixCard(item) {
+function createMidMixCard(item, index) {
   const cover = item.cover || item.imageUrl || "";
   const artist = item.artist || item.description || "";
+  const fetchPriority = index < 3 ? 'fetchpriority="high"' : "";
 
   return `
     <article
@@ -72,8 +73,9 @@ function createMidMixCard(item) {
         src="${cover}"
         width="82"
         height="82"
-        loading="lazy"
+        loading="eager"
         decoding="async"
+        ${fetchPriority}
         alt=""
       />
 

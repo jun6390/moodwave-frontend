@@ -181,6 +181,8 @@ function renderEmotionTracks(tracks) {
           <img
             class="emotion-track-card__image"
             src="${escapeHTML(cover)}"
+            width="300"
+            height="300"
             loading="lazy"
             decoding="async"
             alt="${escapeHTML(title)}"

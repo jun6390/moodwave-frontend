@@ -26,6 +26,8 @@ export function renderWeatherPage() {
               alt=""
               class="weather-icon"
               id="weatherIcon"
+              width="60"
+              height="60"
             />
             <h1 class="weather-title" id="weatherTitle">Rainy</h1>
           </div>
@@ -60,6 +62,8 @@ export function renderWeatherPage() {
           <img
             class="btn-today"
             src="/assets/icon/weather-play.svg"
+            width="60"
+            height="60"
             alt=""
           />
         </div>
@@ -328,6 +332,8 @@ export function initWeatherPage() {
         <img
           class="other-weather-img"
           src="${playlist.image}"
+          width="265"
+          height="265"
           loading="lazy"
           decoding="async"
           alt="${playlist.title}"
@@ -337,6 +343,8 @@ export function initWeatherPage() {
           <img
             class="weather-card-icon"
             src="${playlist.icon}"
+            width="50"
+            height="50"
             alt=""
           />
 
@@ -348,6 +356,8 @@ export function initWeatherPage() {
         <img
           class="btn-other-weather"
           src="/assets/icon/weather-play.svg"
+          width="40"
+          height="40"
           alt=""
         />
       `;
