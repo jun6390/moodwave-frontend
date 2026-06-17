@@ -40,6 +40,10 @@ const testTrackUris = [
 let spotifyAccessToken = null;
 let spotifyPlayer = null;
 let spotifyDeviceId = null;
+let spotifySdkLoadPromise = null;
+let spotifyPlayerInitPromise = null;
+let spotifyReadyPromise = null;
+let resolveSpotifyReady = null;
 let isSpotifyReady = false;
 let isPlaying = false;
 let hasStartedPlayback = false;
@@ -57,6 +61,8 @@ let lockedCardTrackUri = "";
 let pendingTrackId = null;
 let pendingTrackStartedAt = 0;
 const PENDING_TRACK_LOCK_MS = 4000;
+const SPOTIFY_SDK_URL = "https://sdk.scdn.co/spotify-player.js";
+const SPOTIFY_PLAYER_READY_TIMEOUT_MS = 10000;
 
 let isShuffleOn = false;
 let repeatMode = "off";
@@ -110,9 +116,21 @@ export async function getSpotifyAccessToken() {
 // Spotify Web Playback SDK 스크립트 로드
 // =========================
 function loadSpotifySDK() {
-  return new Promise((resolve) => {
+  if (window.Spotify) {
+    console.log("Spotify SDK 이미 로드됨");
+    return Promise.resolve();
+  }
+
+  if (spotifySdkLoadPromise) {
+    return spotifySdkLoadPromise;
+  }
+
+  spotifySdkLoadPromise = new Promise((resolve, reject) => {
+    const existingScript = document.querySelector(
+      `script[src="${SPOTIFY_SDK_URL}"]`,
+    );
+
     if (window.Spotify) {
-      console.log("Spotify SDK 이미 로드됨");
       resolve();
       return;
     }
@@ -122,12 +140,23 @@ function loadSpotifySDK() {
       resolve();
     };
 
+    if (existingScript) {
+      existingScript.addEventListener("error", reject, { once: true });
+      return;
+    }
+
     const script = document.createElement("script");
-    script.src = "https://sdk.scdn.co/spotify-player.js";
+    script.src = SPOTIFY_SDK_URL;
     script.async = true;
+    script.onerror = () => {
+      spotifySdkLoadPromise = null;
+      reject(new Error("Spotify Web Playback SDK 로딩 실패"));
+    };
 
     document.body.appendChild(script);
   });
+
+  return spotifySdkLoadPromise;
 }
 
 // =========================
@@ -171,19 +200,6 @@ async function handleSpotifyError(response, actionName) {
   }
 
   return false;
-}
-
-// =========================
-// Spotify Player 준비 확인
-// =========================
-function checkSpotifyPlayerReady() {
-  if (!spotifyPlayer || !isSpotifyReady) {
-    console.log("로그인 후 이용 가능합니다.");
-    alert("로그인 후 이용 가능합니다.");
-    return false;
-  }
-
-  return true;
 }
 
 // =========================
@@ -603,7 +619,7 @@ async function playTestTrack() {
 // 선택한 카드의 곡 재생
 // =========================
 async function playSelectedTrack(track) {
-  if (!checkSpotifyPlayerReady()) return;
+  if (!(await ensureSpotifyPlayerReady())) return;
 
   if (!spotifyDeviceId) {
     console.log("Spotify device_id가 아직 없습니다.");
@@ -1068,7 +1084,7 @@ function stopProgressTimer() {
 // 셔플 토글
 // =========================
 async function toggleShuffle() {
-  if (!checkSpotifyPlayerReady()) return;
+  if (!(await ensureSpotifyPlayerReady())) return;
 
   const nextShuffleState = !isShuffleOn;
 
@@ -1093,7 +1109,7 @@ async function toggleShuffle() {
 // 반복 모드 변경
 // =========================
 async function toggleRepeat() {
-  if (!checkSpotifyPlayerReady()) return;
+  if (!(await ensureSpotifyPlayerReady())) return;
 
   const repeatModes = ["off", "context", "track"];
   const currentIndex = repeatModes.indexOf(repeatMode);
@@ -1277,7 +1293,7 @@ async function showDevices(anchorElement) {
 // 볼륨 음소거 / 복구
 // =========================
 async function toggleMute() {
-  if (!checkSpotifyPlayerReady()) return;
+  if (!(await ensureSpotifyPlayerReady())) return;
 
   try {
     const nextVolume = currentVolume > 0 ? 0 : previousVolume || 0.5;
@@ -1302,7 +1318,7 @@ async function toggleMute() {
 // 볼륨바 클릭으로 볼륨 조절
 // =========================
 async function handleVolumeBarClick(event) {
-  if (!checkSpotifyPlayerReady()) return;
+  if (!(await ensureSpotifyPlayerReady())) return;
 
   const volumeBar = event.currentTarget;
   const rect = volumeBar.getBoundingClientRect();
@@ -1331,7 +1347,7 @@ async function handleVolumeBarClick(event) {
 // 진행바 클릭으로 재생 위치 이동
 // =========================
 async function handleProgressBarClick(event) {
-  if (!checkSpotifyPlayerReady()) return;
+  if (!(await ensureSpotifyPlayerReady())) return;
 
   if (!currentDuration) {
     console.log("곡 재생 시간이 없습니다.");
@@ -1405,6 +1421,16 @@ async function toggleFullscreen() {
 // Spotify Player 생성
 // =========================
 function createSpotifyPlayer() {
+  if (spotifyPlayer) {
+    return;
+  }
+
+  if (!spotifyReadyPromise) {
+    spotifyReadyPromise = new Promise((resolve) => {
+      resolveSpotifyReady = resolve;
+    });
+  }
+
   spotifyPlayer = new window.Spotify.Player({
     name: "MOOD WAVE Player",
 
@@ -1422,6 +1448,8 @@ function createSpotifyPlayer() {
 
     console.log("Spotify Player 준비 완료");
     console.log("device_id:", spotifyDeviceId);
+
+    resolveSpotifyReady?.();
 
     await transferPlaybackToMoodWave();
 
@@ -1593,18 +1621,76 @@ function initPlayerPopoverEvents() {
 // Spotify Player 초기 준비
 // =========================
 async function initSpotifyPlayer() {
-  const token = await getSpotifyAccessToken();
-
-  if (!token) {
-    console.log("Spotify 로그인이 필요합니다.");
-    return;
+  if (spotifyPlayer && isSpotifyReady) {
+    return true;
   }
 
-  await loadSpotifySDK();
+  if (spotifyPlayerInitPromise) {
+    return spotifyPlayerInitPromise;
+  }
 
-  console.log("Spotify Player SDK 준비 완료");
+  spotifyPlayerInitPromise = (async () => {
+    const token = await getSpotifyAccessToken();
 
-  createSpotifyPlayer();
+    if (!token) {
+      console.log("Spotify 로그인이 필요합니다.");
+      return false;
+    }
+
+    await loadSpotifySDK();
+
+    console.log("Spotify Player SDK 준비 완료");
+
+    createSpotifyPlayer();
+
+    return waitForSpotifyPlayerReady();
+  })();
+
+  const isReady = await spotifyPlayerInitPromise;
+
+  if (!isReady) {
+    spotifyPlayerInitPromise = null;
+  }
+
+  return isReady;
+}
+
+function waitForSpotifyPlayerReady() {
+  if (spotifyPlayer && isSpotifyReady) {
+    return Promise.resolve(true);
+  }
+
+  if (!spotifyReadyPromise) {
+    return Promise.resolve(false);
+  }
+
+  return Promise.race([
+    spotifyReadyPromise.then(() => true),
+    new Promise((resolve) => {
+      window.setTimeout(
+        () => resolve(false),
+        SPOTIFY_PLAYER_READY_TIMEOUT_MS,
+      );
+    }),
+  ]);
+}
+
+async function ensureSpotifyPlayerReady() {
+  let isReady = false;
+
+  try {
+    isReady = await initSpotifyPlayer();
+  } catch (error) {
+    console.error("Spotify Player 준비 실패:", error);
+    spotifyPlayerInitPromise = null;
+  }
+
+  if (isReady) {
+    return true;
+  }
+
+  alert("Spotify 로그인 또는 플레이어 준비가 필요합니다.");
+  return false;
 }
 
 // =========================
@@ -1835,7 +1921,7 @@ function initFooterEvents() {
 
   if (playButton) {
     playButton.addEventListener("click", async () => {
-      if (!checkSpotifyPlayerReady()) return;
+      if (!(await ensureSpotifyPlayerReady())) return;
 
       if (!hasStartedPlayback) {
         await playTestTrack();
@@ -1848,7 +1934,7 @@ function initFooterEvents() {
 
   if (prevButton) {
     prevButton.addEventListener("click", async () => {
-      if (!checkSpotifyPlayerReady()) return;
+      if (!(await ensureSpotifyPlayerReady())) return;
 
       unlockTrackUIByCardClick();
       resetProgressForTrackChange();
@@ -1860,7 +1946,7 @@ function initFooterEvents() {
 
   if (nextButton) {
     nextButton.addEventListener("click", async () => {
-      if (!checkSpotifyPlayerReady()) return;
+      if (!(await ensureSpotifyPlayerReady())) return;
 
       unlockTrackUIByCardClick();
       resetProgressForTrackChange();
@@ -1915,5 +2001,4 @@ export function initFooter() {
   initFooterEvents();
   initPlayerPopoverEvents();
   initTrackCardEvents();
-  initSpotifyPlayer();
 }
