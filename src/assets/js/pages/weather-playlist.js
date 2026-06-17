@@ -1,6 +1,8 @@
 import { renderSongTable, initSongTable } from "../components/songTable.js";
 import { playlistMap, weatherTracks } from "../../../data.js";
 
+let cleanupStickyHeaderScroll = null;
+
 // =========================
 // Weather Playlist 페이지 HTML 렌더링
 // =========================
@@ -76,11 +78,13 @@ export function initWeatherPlaylistPage() {
     return;
   }
 
-  renderPlaylistHero(playlist);
+  const cleanupStickyHeader = renderPlaylistHero(playlist);
   renderWeatherTracks(playlistType, playlist);
   initSongTable();
 
   console.log("Weather Playlist page loaded");
+
+  return cleanupStickyHeader;
 }
 
 // =========================
@@ -129,13 +133,15 @@ function renderPlaylistHero(playlist) {
   playlistCover.style.backgroundSize = "cover";
   playlistCover.style.backgroundPosition = "center";
 
-  initStickyHeader(playlist.title);
+  return initStickyHeader(playlist.title);
 }
 
 // =========================
 // 스크롤 시 스티키 헤더 처리
 // =========================
 function initStickyHeader(title) {
+  cleanupStickyHeaderScroll?.();
+
   const main =
     document.querySelector(".playlist-main") || document.querySelector("#main");
   const hero = document.querySelector(".playlist-hero-container");
@@ -158,8 +164,15 @@ function initStickyHeader(title) {
     }
   };
 
-  main.addEventListener("scroll", handleStickyHeader);
+  main.addEventListener("scroll", handleStickyHeader, { passive: true });
   handleStickyHeader();
+
+  cleanupStickyHeaderScroll = () => {
+    main.removeEventListener("scroll", handleStickyHeader);
+    cleanupStickyHeaderScroll = null;
+  };
+
+  return cleanupStickyHeaderScroll;
 }
 
 // =========================

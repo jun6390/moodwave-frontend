@@ -2,6 +2,8 @@ import { isLiked } from "../components/footer.js";
 import { renderSongTable } from "../components/songTable.js";
 import { LIKE_API_URL } from "../api/api.js";
 
+let cleanupLikedPageEvents = null;
+
 // =========================
 // 좋아요 페이지 HTML 렌더링
 // =========================
@@ -93,9 +95,11 @@ export function initLikedPage() {
 
   if (!container) return;
 
+  cleanupLikedPageEvents?.();
+
   loadLikedTracks();
 
-  container.addEventListener("click", async (e) => {
+  const handleRemoveClick = async (e) => {
     const removeBtn = e.target.closest(".playlist-track-remove-button");
 
     if (!removeBtn) return;
@@ -112,12 +116,24 @@ export function initLikedPage() {
 
     try {
       await removeLike(musicId);
-      await loadLikedTracks();
     } catch (err) {
       console.error("좋아요 삭제 실패:", err);
       alert("좋아요 삭제에 실패했습니다.");
     }
-  });
+  };
 
-  window.addEventListener("likeChanged", loadLikedTracks);
+  const handleLikeChanged = () => {
+    loadLikedTracks();
+  };
+
+  container.addEventListener("click", handleRemoveClick);
+  window.addEventListener("likeChanged", handleLikeChanged);
+
+  cleanupLikedPageEvents = () => {
+    container.removeEventListener("click", handleRemoveClick);
+    window.removeEventListener("likeChanged", handleLikeChanged);
+    cleanupLikedPageEvents = null;
+  };
+
+  return cleanupLikedPageEvents;
 }

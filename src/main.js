@@ -28,6 +28,8 @@ import {
 import { isLoggedIn } from "./assets/js/utils/auth.js";
 import { initToast } from "./assets/js/utils/toast.js";
 
+let activePageCleanup = null;
+
 // =========================
 // 페이지 라우트 목록
 // =========================
@@ -101,7 +103,21 @@ function findRoute(hash) {
 // =========================
 // 페이지 렌더링 함수
 // =========================
+function cleanupActivePage() {
+  if (typeof activePageCleanup !== "function") return;
+
+  try {
+    activePageCleanup();
+  } catch (error) {
+    console.error("페이지 cleanup 실패:", error);
+  } finally {
+    activePageCleanup = null;
+  }
+}
+
 async function renderPage(main, route) {
+  cleanupActivePage();
+
   main.className = "main";
 
   if (route.pageClass) {
@@ -111,7 +127,8 @@ async function renderPage(main, route) {
   main.innerHTML = route.render();
 
   if (route.init) {
-    await route.init();
+    const cleanup = await route.init();
+    activePageCleanup = typeof cleanup === "function" ? cleanup : null;
   }
 }
 
