@@ -54,9 +54,10 @@ export function renderSearch() {
 // =========================
 // 검색 API 호출 함수
 // =========================
-async function fetchSearchTracks(keyword) {
+async function fetchSearchTracks(keyword, signal) {
   const response = await fetch(
     `${HOME_API_URL}/search?keyword=${encodeURIComponent(keyword)}`,
+    { signal },
   );
 
   if (!response.ok) {
@@ -132,23 +133,38 @@ function renderSearchResult(items) {
 // =========================
 // 검색 페이지 초기화 함수
 // =========================
-export async function initSearch() {
+export function initSearch() {
   const keyword = getSearchKeyword();
+  const controller = new AbortController();
 
   if (!keyword) {
     renderSearchResult([]);
-    return;
+    return () => {
+      controller.abort();
+    };
   }
 
   renderSearchMessage("검색 중...", "search-page__loading");
 
-  try {
-    const tracks = await fetchSearchTracks(keyword);
+  (async () => {
+    try {
+      const tracks = await fetchSearchTracks(keyword, controller.signal);
 
-    renderSearchResult(tracks);
-  } catch (error) {
-    console.error("검색 데이터 조회 실패:", error);
+      if (controller.signal.aborted) return;
 
-    renderSearchMessage("검색 결과를 불러오지 못했습니다.");
-  }
+      renderSearchResult(tracks);
+    } catch (error) {
+      if (error.name === "AbortError") return;
+
+      console.error("검색 데이터 조회 실패:", error);
+
+      if (!controller.signal.aborted) {
+        renderSearchMessage("검색 결과를 불러오지 못했습니다.");
+      }
+    }
+  })();
+
+  return () => {
+    controller.abort();
+  };
 }
