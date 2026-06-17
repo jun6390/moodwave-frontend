@@ -1,5 +1,6 @@
 import { user } from "../../../data.js";
 import { API_ENDPOINTS } from "../api/api.js";
+import { clearAuthCache, getCurrentUser } from "../utils/auth.js";
 import { escapeHTML } from "../utils/escapeHTML.js";
 
 const SPOTIFY_LOGO_URL =
@@ -195,33 +196,13 @@ function renderSpotifyProfile(data) {
 }
 
 // =========================
-// 유저 정보 요청 함수
-// =========================
-async function fetchUser() {
-  const response = await fetch(API_ENDPOINTS.user, {
-    method: "GET",
-    credentials: "include",
-  });
-
-  if (response.ok) {
-    return response.json();
-  }
-
-  if (response.status === 401) {
-    throw new Error("UNAUTHORIZED");
-  }
-
-  throw new Error("NETWORK_ERROR");
-}
-
-// =========================
 // 유저 렌더링 함수
 // =========================
 async function renderUser() {
   try {
-    const data = await fetchUser();
+    const data = await getCurrentUser();
 
-    if (data && data.isLoggedIn) {
+    if (data) {
       renderSpotifyProfile(data);
     } else {
       renderSpotifyConnectButton();
@@ -240,6 +221,8 @@ function logout(event) {
   event.stopPropagation();
 
   alert("로그아웃 되었습니다.");
+
+  clearAuthCache();
 
   window.location.href = getLogoutUrl();
 }

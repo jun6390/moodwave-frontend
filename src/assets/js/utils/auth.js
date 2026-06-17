@@ -1,5 +1,11 @@
 import { API_BASE_URL } from "../api/api.js";
 
+const AUTH_CACHE_TTL_MS = 30 * 1000;
+
+let authUserCache = null;
+let authUserCachedAt = 0;
+let authUserRequestPromise = null;
+
 // =========================
 // 유효한 로그인 사용자 여부 확인 함수
 // =========================
@@ -15,23 +21,84 @@ function isValidUser(user) {
   );
 }
 
+function getCachedUser() {
+  if (!authUserCache) return null;
+
+  const cacheAge = Date.now() - authUserCachedAt;
+
+  if (cacheAge > AUTH_CACHE_TTL_MS) {
+    authUserCache = null;
+    authUserCachedAt = 0;
+    return null;
+  }
+
+  return authUserCache;
+}
+
+export function clearAuthCache() {
+  authUserCache = null;
+  authUserCachedAt = 0;
+  authUserRequestPromise = null;
+}
+
 // =========================
-// 로그인 여부 확인 함수
+// 현재 로그인 사용자 조회 함수
 // =========================
-export async function isLoggedIn() {
-  try {
+export async function getCurrentUser({ force = false } = {}) {
+  if (!force) {
+    const cachedUser = getCachedUser();
+
+    if (cachedUser) {
+      return cachedUser;
+    }
+
+    if (authUserRequestPromise) {
+      return authUserRequestPromise;
+    }
+  }
+
+  authUserRequestPromise = (async () => {
     const response = await fetch(`${API_BASE_URL}/api/user`, {
       method: "GET",
       credentials: "include",
     });
 
     if (!response.ok) {
-      return false;
+      clearAuthCache();
+      return null;
     }
 
     const user = await response.json();
 
-    return isValidUser(user);
+    if (!isValidUser(user)) {
+      clearAuthCache();
+      return null;
+    }
+
+    authUserCache = user;
+    authUserCachedAt = Date.now();
+
+    return user;
+  })();
+
+  try {
+    return await authUserRequestPromise;
+  } catch (error) {
+    clearAuthCache();
+    throw error;
+  } finally {
+    authUserRequestPromise = null;
+  }
+}
+
+// =========================
+// 로그인 여부 확인 함수
+// =========================
+export async function isLoggedIn() {
+  try {
+    const user = await getCurrentUser();
+
+    return Boolean(user);
   } catch (error) {
     console.error("로그인 확인 실패:", error);
     return false;
