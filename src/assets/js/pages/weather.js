@@ -6,6 +6,105 @@ import {
 } from "../components/loading.js";
 
 const WEATHER_API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
+const WEATHER_CACHE_TTL_MS = 10 * 60 * 1000;
+const DEFAULT_WEATHER_LOCATION = {
+  lat: 37.5665,
+  lon: 126.978,
+};
+
+const weatherDataCacheMap = new Map();
+const weatherRequestPromiseMap = new Map();
+let activeWeatherRunId = 0;
+
+function getWeatherCacheKey(lat, lon) {
+  return `${lat.toFixed(2)},${lon.toFixed(2)}`;
+}
+
+function getCachedWeatherData(cacheKey) {
+  const cachedWeatherData = weatherDataCacheMap.get(cacheKey);
+
+  if (!cachedWeatherData) return null;
+
+  const cacheAge = Date.now() - cachedWeatherData.cachedAt;
+
+  if (cacheAge > WEATHER_CACHE_TTL_MS) {
+    weatherDataCacheMap.delete(cacheKey);
+    return null;
+  }
+
+  return cachedWeatherData.data;
+}
+
+// =========================
+// 날씨 이름 정규화
+// =========================
+function normalizeWeather(weather) {
+  if (
+    weather === "Mist" ||
+    weather === "Fog" ||
+    weather === "Haze" ||
+    weather === "Smoke" ||
+    weather === "Dust" ||
+    weather === "Sand" ||
+    weather === "Ash" ||
+    weather === "Squall" ||
+    weather === "Tornado"
+  ) {
+    return "Foggy";
+  }
+
+  return weather;
+}
+
+async function fetchWeatherData(lat, lon) {
+  if (!WEATHER_API_KEY) {
+    throw new Error("VITE_WEATHER_API_KEY가 설정되지 않았습니다.");
+  }
+
+  const cacheKey = getWeatherCacheKey(lat, lon);
+  const cachedWeatherData = getCachedWeatherData(cacheKey);
+
+  if (cachedWeatherData) {
+    return cachedWeatherData;
+  }
+
+  if (weatherRequestPromiseMap.has(cacheKey)) {
+    return weatherRequestPromiseMap.get(cacheKey);
+  }
+
+  const requestPromise = (async () => {
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error("날씨 정보를 불러오지 못했습니다.");
+    }
+
+    const data = await response.json();
+    const weatherData = {
+      weather: normalizeWeather(data.weather?.[0]?.main),
+      temp: Math.round(data.main.temp),
+      city: data.name,
+    };
+
+    weatherDataCacheMap.set(cacheKey, {
+      data: weatherData,
+      cachedAt: Date.now(),
+    });
+
+    return weatherData;
+  })();
+
+  weatherRequestPromiseMap.set(cacheKey, requestPromise);
+
+  try {
+    return await requestPromise;
+  } finally {
+    if (weatherRequestPromiseMap.get(cacheKey) === requestPromise) {
+      weatherRequestPromiseMap.delete(cacheKey);
+    }
+  }
+}
 
 // =========================
 // Weather 페이지 HTML 렌더링
@@ -139,6 +238,7 @@ export function renderWeatherPage() {
 // Weather 페이지 초기화
 // =========================
 export function initWeatherPage() {
+  const runId = ++activeWeatherRunId;
   const weatherCardGrid = document.querySelector("#weatherCardGrid");
 
   const weatherIcon = document.querySelector("#weatherIcon");
@@ -188,7 +288,11 @@ export function initWeatherPage() {
       () => {
         console.log("위치 정보를 가져올 수 없어 서울 날씨로 대체합니다.");
 
-        getWeather(37.5665, 126.978);
+        getWeather(DEFAULT_WEATHER_LOCATION.lat, DEFAULT_WEATHER_LOCATION.lon);
+      },
+      {
+        maximumAge: WEATHER_CACHE_TTL_MS,
+        timeout: 5000,
       },
     );
   }
@@ -197,35 +301,21 @@ export function initWeatherPage() {
   // 날씨 API 호출
   // =========================
   async function getWeather(lat, lon) {
-    if (!WEATHER_API_KEY) {
-      console.error("VITE_WEATHER_API_KEY가 설정되지 않았습니다.");
-      setLoading("weatherLoading", false);
-      return;
-    }
-
-    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`;
-
     try {
-      const response = await fetch(url);
+      const data = await fetchWeatherData(lat, lon);
 
-      if (!response.ok) {
-        throw new Error("날씨 정보를 불러오지 못했습니다.");
-      }
+      if (runId !== activeWeatherRunId) return;
 
-      const data = await response.json();
+      weatherInfo.textContent = `${data.temp}°C · ${data.city}`;
 
-      const weather = normalizeWeather(data.weather[0].main);
-      const temp = Math.round(data.main.temp);
-      const city = data.name;
-
-      weatherInfo.textContent = `${temp}°C · ${city}`;
-
-      updateWeather(weather);
-      updatePlaylist(weather);
-      renderWeatherCards(weather);
+      updateWeather(data.weather);
+      updatePlaylist(data.weather);
+      renderWeatherCards(data.weather);
 
       setWeatherPageLoaded(true);
     } catch (error) {
+      if (runId !== activeWeatherRunId) return;
+
       console.error(error);
       setLoading("weatherLoading", false);
     }
@@ -242,27 +332,6 @@ export function initWeatherPage() {
     setContentVisible("featuredCard", isLoaded);
     setContentVisible("weatherCardsSkeleton", !isLoaded);
     setContentVisible("weatherCardGrid", isLoaded);
-  }
-
-  // =========================
-  // 날씨 이름 정규화
-  // =========================
-  function normalizeWeather(weather) {
-    if (
-      weather === "Mist" ||
-      weather === "Fog" ||
-      weather === "Haze" ||
-      weather === "Smoke" ||
-      weather === "Dust" ||
-      weather === "Sand" ||
-      weather === "Ash" ||
-      weather === "Squall" ||
-      weather === "Tornado"
-    ) {
-      return "Foggy";
-    }
-
-    return weather;
   }
 
   // =========================
@@ -365,6 +434,12 @@ export function initWeatherPage() {
       weatherCardGrid.append(card);
     });
   }
+
+  return () => {
+    if (runId === activeWeatherRunId) {
+      activeWeatherRunId++;
+    }
+  };
 }
 
 // =========================
