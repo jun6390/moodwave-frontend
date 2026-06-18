@@ -64,6 +64,7 @@ const PENDING_TRACK_LOCK_MS = 4000;
 const SPOTIFY_SDK_URL = "https://sdk.scdn.co/spotify-player.js";
 const SPOTIFY_PLAYER_READY_TIMEOUT_MS = 10000;
 const TRACK_SEARCH_CACHE_TTL_MS = 10 * 60 * 1000;
+const SPOTIFY_ACCESS_TOKEN_CACHE_TTL_MS = 50 * 60 * 1000;
 
 let isShuffleOn = false;
 let repeatMode = "off";
@@ -76,12 +77,35 @@ let lastProgressUpdatedAt = 0;
 let progressTimer = null;
 const trackSearchCacheMap = new Map();
 const trackSearchRequestMap = new Map();
+let spotifyAccessTokenFetchedAt = 0;
+let spotifyAccessTokenRequestPromise = null;
 
 // =========================
 // Spotify Access Token 가져오기
 // =========================
-export async function getSpotifyAccessToken() {
-  try {
+function hasValidSpotifyAccessToken() {
+  if (!spotifyAccessToken) return false;
+
+  const tokenAge = Date.now() - spotifyAccessTokenFetchedAt;
+
+  return tokenAge < SPOTIFY_ACCESS_TOKEN_CACHE_TTL_MS;
+}
+
+function clearSpotifyAccessToken() {
+  spotifyAccessToken = null;
+  spotifyAccessTokenFetchedAt = 0;
+}
+
+export async function getSpotifyAccessToken({ force = false } = {}) {
+  if (!force && hasValidSpotifyAccessToken()) {
+    return spotifyAccessToken;
+  }
+
+  if (!force && spotifyAccessTokenRequestPromise) {
+    return spotifyAccessTokenRequestPromise;
+  }
+
+  const requestPromise = (async () => {
     const response = await fetch(SPOTIFY_ACCESS_TOKEN_API_URL, {
       method: "GET",
       credentials: "include",
@@ -89,7 +113,7 @@ export async function getSpotifyAccessToken() {
 
     if (response.status === 401) {
       console.warn("Spotify 로그인이 필요합니다.");
-      spotifyAccessToken = null;
+      clearSpotifyAccessToken();
       return null;
     }
 
@@ -99,19 +123,32 @@ export async function getSpotifyAccessToken() {
 
     const data = await response.json();
 
-    spotifyAccessToken = data.accessToken;
-
-    console.log("Spotify access token 받아오기 성공");
-
-    if (spotifyAccessToken) {
-      console.log("토큰 길이:", spotifyAccessToken.length);
+    if (!data.accessToken) {
+      clearSpotifyAccessToken();
+      return null;
     }
 
+    spotifyAccessToken = data.accessToken;
+    spotifyAccessTokenFetchedAt = Date.now();
+
+    console.log("Spotify access token 받아오기 성공");
+    console.log("토큰 길이:", spotifyAccessToken.length);
+
     return spotifyAccessToken;
+  })();
+
+  spotifyAccessTokenRequestPromise = requestPromise;
+
+  try {
+    return await requestPromise;
   } catch (error) {
     console.error("Spotify access token 받아오기 실패:", error);
-    spotifyAccessToken = null;
+    clearSpotifyAccessToken();
     return null;
+  } finally {
+    if (spotifyAccessTokenRequestPromise === requestPromise) {
+      spotifyAccessTokenRequestPromise = null;
+    }
   }
 }
 
@@ -166,18 +203,40 @@ function loadSpotifySDK() {
 // Spotify Web API 요청 공통 함수
 // =========================
 async function spotifyRequest(url, options = {}) {
-  const token = spotifyAccessToken || (await getSpotifyAccessToken());
+  const token = await getSpotifyAccessToken();
 
   if (!token) {
     throw new Error("Spotify access token이 없습니다.");
   }
 
-  return fetch(url, {
+  const requestOptions = {
     ...options,
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
       ...(options.headers || {}),
+    },
+  };
+
+  const response = await fetch(url, requestOptions);
+
+  if (response.status !== 401) {
+    return response;
+  }
+
+  clearSpotifyAccessToken();
+
+  const refreshedToken = await getSpotifyAccessToken({ force: true });
+
+  if (!refreshedToken) {
+    return response;
+  }
+
+  return fetch(url, {
+    ...requestOptions,
+    headers: {
+      ...requestOptions.headers,
+      Authorization: `Bearer ${refreshedToken}`,
     },
   });
 }
@@ -1494,7 +1553,7 @@ function createSpotifyPlayer() {
     name: "MOOD WAVE Player",
 
     getOAuthToken: async (callback) => {
-      const token = spotifyAccessToken || (await getSpotifyAccessToken());
+      const token = await getSpotifyAccessToken();
       callback(token);
     },
 
