@@ -25,7 +25,7 @@ export function renderLikedPage() {
 // =========================
 // 좋아요 목록 불러오기
 // =========================
-async function loadLikedTracks() {
+async function loadLikedTracks(signal) {
   const container = document.querySelector("#list-container");
   if (!container) return;
 
@@ -33,6 +33,7 @@ async function loadLikedTracks() {
     const response = await fetch(LIKE_API_URL, {
       method: "GET",
       credentials: "include",
+      signal,
     });
 
     if (!response.ok) {
@@ -42,6 +43,11 @@ async function loadLikedTracks() {
     }
 
     const tracks = await response.json();
+
+    if (signal?.aborted || !document.body.contains(container)) {
+      return;
+    }
+
     console.log("좋아요 목록:", tracks);
 
     if (!tracks || tracks.length === 0) {
@@ -55,6 +61,8 @@ async function loadLikedTracks() {
       emptyMessage: "좋아요한 곡이 없습니다.",
     });
   } catch (err) {
+    if (err.name === "AbortError") return;
+
     console.error("좋아요 목록 로딩 실패:", err);
     container.innerHTML = "<p>좋아요 목록을 불러오지 못했습니다.</p>";
   }
@@ -97,7 +105,16 @@ export function initLikedPage() {
 
   cleanupLikedPageEvents?.();
 
-  loadLikedTracks();
+  let activeListController = null;
+
+  const requestLikedTracks = () => {
+    activeListController?.abort();
+    activeListController = new AbortController();
+
+    loadLikedTracks(activeListController.signal);
+  };
+
+  requestLikedTracks();
 
   const handleRemoveClick = async (e) => {
     const removeBtn = e.target.closest(".playlist-track-remove-button");
@@ -123,13 +140,14 @@ export function initLikedPage() {
   };
 
   const handleLikeChanged = () => {
-    loadLikedTracks();
+    requestLikedTracks();
   };
 
   container.addEventListener("click", handleRemoveClick);
   window.addEventListener("likeChanged", handleLikeChanged);
 
   cleanupLikedPageEvents = () => {
+    activeListController?.abort();
     container.removeEventListener("click", handleRemoveClick);
     window.removeEventListener("likeChanged", handleLikeChanged);
     cleanupLikedPageEvents = null;
