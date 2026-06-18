@@ -70,8 +70,13 @@ const demoWeatherList = [
 let genreChartInstance = null;
 let weatherChartInstance = null;
 let chartJsLoadPromise = null;
+let chartDataCache = null;
+let chartDataCachedAt = 0;
+let chartDataRequestPromise = null;
+let activeChartRunId = 0;
 
 const CHART_JS_URL = "https://cdn.jsdelivr.net/npm/chart.js";
+const CHART_DATA_CACHE_TTL_MS = 5 * 60 * 1000;
 
 function loadChartJs() {
   if (window.Chart) {
@@ -108,6 +113,72 @@ function loadChartJs() {
   });
 
   return chartJsLoadPromise;
+}
+
+function getCachedChartData() {
+  if (!chartDataCache) return null;
+
+  const cacheAge = Date.now() - chartDataCachedAt;
+
+  if (cacheAge > CHART_DATA_CACHE_TTL_MS) {
+    chartDataCache = null;
+    chartDataCachedAt = 0;
+    return null;
+  }
+
+  return chartDataCache;
+}
+
+async function getChartMusicData() {
+  const cachedChartData = getCachedChartData();
+
+  if (cachedChartData) {
+    return cachedChartData;
+  }
+
+  if (chartDataRequestPromise) {
+    return chartDataRequestPromise;
+  }
+
+  chartDataRequestPromise = (async () => {
+    const response = await fetch(API_ENDPOINTS.music);
+
+    if (!response.ok) {
+      throw new Error("음악 데이터 조회 실패");
+    }
+
+    const apiData = await response.json();
+
+    chartDataCache = apiData;
+    chartDataCachedAt = Date.now();
+
+    return apiData;
+  })();
+
+  try {
+    return await chartDataRequestPromise;
+  } finally {
+    chartDataRequestPromise = null;
+  }
+}
+
+function destroyGenreChart() {
+  if (!genreChartInstance) return;
+
+  genreChartInstance.destroy();
+  genreChartInstance = null;
+}
+
+function destroyWeatherChart() {
+  if (!weatherChartInstance) return;
+
+  weatherChartInstance.destroy();
+  weatherChartInstance = null;
+}
+
+function destroyChartInstances() {
+  destroyGenreChart();
+  destroyWeatherChart();
 }
 
 // =========================
@@ -188,7 +259,8 @@ function renderChartSkeleton() {
 // =========================
 // 차트 페이지 초기화
 // =========================
-export async function initChartPage() {
+export function initChartPage() {
+  const runId = ++activeChartRunId;
   const songTableContainer = document.querySelector("#chartSongTable");
 
   setContentVisible("chartSkeleton", true);
@@ -197,65 +269,79 @@ export async function initChartPage() {
   setLoading("chartRecommendLoading", true);
   setContentVisible("chartSongTable", false);
 
-  try {
-    const chartJsPromise = loadChartJs();
-    const response = await fetch(API_ENDPOINTS.music);
+  (async () => {
+    try {
+      const chartJsPromise = loadChartJs();
+      const apiData = await getChartMusicData();
 
-    if (!response.ok) {
-      throw new Error("음악 데이터 조회 실패");
+      if (runId !== activeChartRunId) return;
+
+      const data = apiData.map((song, index) =>
+        normalizeChartData(song, index),
+      );
+
+      const topGenres = getTopDataByField(data, "genre");
+      const topWeather = getTopDataByField(data, "weather");
+
+      const mostListenedGenre = topGenres[0]?.[0];
+
+      const recommendedSongs = data
+        .filter((song) => song.genre === mostListenedGenre)
+        .slice(0, 10)
+        .map(normalizeSongData);
+
+      setContentVisible("chartSkeleton", false);
+      setContentVisible("chartDashboard", true);
+
+      await chartJsPromise;
+
+      if (runId !== activeChartRunId) return;
+
+      renderGenreChart(topGenres);
+      renderWeatherChart(topWeather);
+
+      if (songTableContainer) {
+        songTableContainer.innerHTML = renderSongTable(recommendedSongs, {
+          actionType: "playlist",
+          actionHeader: "Add",
+          emptyMessage: "추천할 곡이 없습니다.",
+        });
+      }
+
+      initSongTable();
+    } catch (error) {
+      if (runId !== activeChartRunId) return;
+
+      console.error("차트 페이지 초기화 실패:", error);
+
+      setContentVisible("chartSkeleton", false);
+      setContentVisible("chartDashboard", true);
+
+      renderGenreChart([]);
+      renderWeatherChart([]);
+
+      if (songTableContainer) {
+        songTableContainer.innerHTML = `
+          <div class="empty-message">
+            음악 데이터를 불러오지 못했습니다.
+          </div>
+        `;
+      }
+    } finally {
+      if (runId !== activeChartRunId) return;
+
+      setLoading("chartRecommendLoading", false);
+      setContentVisible("chartSongTable", true);
+    }
+  })();
+
+  return () => {
+    if (runId === activeChartRunId) {
+      activeChartRunId++;
     }
 
-    const apiData = await response.json();
-
-    const data = apiData.map((song, index) => normalizeChartData(song, index));
-
-    const topGenres = getTopDataByField(data, "genre");
-    const topWeather = getTopDataByField(data, "weather");
-
-    const mostListenedGenre = topGenres[0]?.[0];
-
-    const recommendedSongs = data
-      .filter((song) => song.genre === mostListenedGenre)
-      .slice(0, 10)
-      .map(normalizeSongData);
-
-    setContentVisible("chartSkeleton", false);
-    setContentVisible("chartDashboard", true);
-
-    await chartJsPromise;
-
-    renderGenreChart(topGenres);
-    renderWeatherChart(topWeather);
-
-    if (songTableContainer) {
-      songTableContainer.innerHTML = renderSongTable(recommendedSongs, {
-        actionType: "playlist",
-        actionHeader: "Add",
-        emptyMessage: "추천할 곡이 없습니다.",
-      });
-    }
-
-    initSongTable();
-  } catch (error) {
-    console.error("차트 페이지 초기화 실패:", error);
-
-    setContentVisible("chartSkeleton", false);
-    setContentVisible("chartDashboard", true);
-
-    renderGenreChart([]);
-    renderWeatherChart([]);
-
-    if (songTableContainer) {
-      songTableContainer.innerHTML = `
-        <div class="empty-message">
-          음악 데이터를 불러오지 못했습니다.
-        </div>
-      `;
-    }
-  } finally {
-    setLoading("chartRecommendLoading", false);
-    setContentVisible("chartSongTable", true);
-  }
+    destroyChartInstances();
+  };
 }
 
 // =========================
@@ -372,9 +458,7 @@ function renderGenreChart(topGenres) {
     return;
   }
 
-  if (genreChartInstance) {
-    genreChartInstance.destroy();
-  }
+  destroyGenreChart();
 
   const genreCtx = genreCanvas.getContext("2d");
 
@@ -451,9 +535,7 @@ function renderWeatherChart(topWeather) {
     return;
   }
 
-  if (weatherChartInstance) {
-    weatherChartInstance.destroy();
-  }
+  destroyWeatherChart();
 
   const weatherCtx = weatherCanvas.getContext("2d");
 
