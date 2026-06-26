@@ -272,7 +272,7 @@ export function initWeatherPage() {
   setWeatherPageLoaded(false);
 
   getCurrentLocation();
-  initWeatherCardDrag(weatherCardGrid);
+  const cleanupWeatherCardDrag = initWeatherCardDrag(weatherCardGrid);
 
   // =========================
   // 현재 위치 가져오기
@@ -439,6 +439,8 @@ export function initWeatherPage() {
     if (runId === activeWeatherRunId) {
       activeWeatherRunId++;
     }
+
+    cleanupWeatherCardDrag();
   };
 }
 
@@ -450,21 +452,17 @@ function initWeatherCardDrag(weatherCardGrid) {
   let startX = 0;
   let scrollLeft = 0;
 
-  weatherCardGrid.addEventListener("mousedown", (e) => {
+  const handleMouseDown = (e) => {
     isDown = true;
     startX = e.pageX - weatherCardGrid.offsetLeft;
     scrollLeft = weatherCardGrid.scrollLeft;
-  });
+  };
 
-  weatherCardGrid.addEventListener("mouseleave", () => {
+  const stopDragging = () => {
     isDown = false;
-  });
+  };
 
-  weatherCardGrid.addEventListener("mouseup", () => {
-    isDown = false;
-  });
-
-  weatherCardGrid.addEventListener("mousemove", (e) => {
+  const handleMouseMove = (e) => {
     if (!isDown) return;
 
     e.preventDefault();
@@ -473,5 +471,17 @@ function initWeatherCardDrag(weatherCardGrid) {
     const walk = (x - startX) * 2;
 
     weatherCardGrid.scrollLeft = scrollLeft - walk;
-  });
+  };
+
+  weatherCardGrid.addEventListener("mousedown", handleMouseDown);
+  weatherCardGrid.addEventListener("mouseleave", stopDragging);
+  weatherCardGrid.addEventListener("mouseup", stopDragging);
+  weatherCardGrid.addEventListener("mousemove", handleMouseMove);
+
+  return () => {
+    weatherCardGrid.removeEventListener("mousedown", handleMouseDown);
+    weatherCardGrid.removeEventListener("mouseleave", stopDragging);
+    weatherCardGrid.removeEventListener("mouseup", stopDragging);
+    weatherCardGrid.removeEventListener("mousemove", handleMouseMove);
+  };
 }

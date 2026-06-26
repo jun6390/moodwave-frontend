@@ -303,13 +303,21 @@ function bindSeeAllEvents() {
   const popularSeeAllBtn = document.querySelector("#popularSeeAllBtn");
   const latestSeeAllBtn = document.querySelector("#latestSeeAllBtn");
 
-  popularSeeAllBtn?.addEventListener("click", () => {
+  const goToPopular = () => {
     location.hash = "#/popular";
-  });
+  };
 
-  latestSeeAllBtn?.addEventListener("click", () => {
+  const goToLatest = () => {
     location.hash = "#/latest";
-  });
+  };
+
+  popularSeeAllBtn?.addEventListener("click", goToPopular);
+  latestSeeAllBtn?.addEventListener("click", goToLatest);
+
+  return () => {
+    popularSeeAllBtn?.removeEventListener("click", goToPopular);
+    latestSeeAllBtn?.removeEventListener("click", goToLatest);
+  };
 }
 
 // =========================
@@ -318,8 +326,8 @@ function bindSeeAllEvents() {
 export function initHome() {
   const runId = ++activeHomeRunId;
   const cachedHomeData = getCachedHomeData();
+  const cleanupSeeAllEvents = bindSeeAllEvents();
 
-  bindSeeAllEvents();
   renderGreeting();
 
   if (cachedHomeData) {
@@ -348,5 +356,7 @@ export function initHome() {
     if (runId === activeHomeRunId) {
       activeHomeRunId++;
     }
+
+    cleanupSeeAllEvents();
   };
 }

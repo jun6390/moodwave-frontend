@@ -285,6 +285,16 @@ function initSearchForm() {
 
   let searchTimer = null;
 
+  const navigateToSearch = (keyword) => {
+    if (!keyword) return;
+
+    const nextHash = `#/search?q=${encodeURIComponent(keyword)}`;
+
+    if (location.hash === nextHash) return;
+
+    location.hash = nextHash;
+  };
+
   searchForm.addEventListener("submit", (event) => {
     event.preventDefault();
 
@@ -293,7 +303,7 @@ function initSearchForm() {
     if (!keyword) return;
 
     clearTimeout(searchTimer);
-    location.hash = `#/search?q=${encodeURIComponent(keyword)}`;
+    navigateToSearch(keyword);
   });
 
   searchInput.addEventListener("input", (event) => {
@@ -302,9 +312,7 @@ function initSearchForm() {
     clearTimeout(searchTimer);
 
     searchTimer = setTimeout(() => {
-      if (!keyword) return;
-
-      location.hash = `#/search?q=${encodeURIComponent(keyword)}`;
+      navigateToSearch(keyword);
     }, 700);
   });
 }

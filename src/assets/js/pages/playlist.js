@@ -132,13 +132,13 @@ function renderPlaylistDetail(playlistName) {
 function bindPlaylistTrackRemoveEvents() {
   const content = document.querySelector('#playlistPageContent');
 
-  if (!content) return;
+  if (!content) return () => {};
 
-  if (content.dataset.removeEventBound === 'true') return;
+  if (content.dataset.removeEventBound === 'true') return () => {};
 
   content.dataset.removeEventBound = 'true';
 
-  content.addEventListener('click', async (event) => {
+  const handleRemoveClick = async (event) => {
     const removeButton = event.target.closest('[data-remove-playlist-track]');
 
     if (!removeButton) return;
@@ -159,7 +159,14 @@ function bindPlaylistTrackRemoveEvents() {
 
     removeTrackFromPlaylist(playlistName, trackId);
     renderPlaylistDetail(playlistName);
-  });
+  };
+
+  content.addEventListener('click', handleRemoveClick);
+
+  return () => {
+    content.removeEventListener('click', handleRemoveClick);
+    delete content.dataset.removeEventBound;
+  };
 }
 
 // =========================
@@ -169,5 +176,5 @@ export function initPlaylistPage() {
   const playlistName = getPlaylistNameFromHash();
 
   renderPlaylistDetail(playlistName);
-  bindPlaylistTrackRemoveEvents();
+  return bindPlaylistTrackRemoveEvents();
 }
