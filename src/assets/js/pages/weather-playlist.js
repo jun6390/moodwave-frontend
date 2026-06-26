@@ -1,5 +1,6 @@
-import { renderSongTable, initSongTable } from "../components/songTable.js";
-import { playlistMap, weatherTracks } from "../../../data.js";
+import { initSongTablePage } from "../components/songTable.js";
+import { playlistMap } from "../../../data.js";
+import { API_ENDPOINTS } from "../api/api.js";
 
 let cleanupStickyHeaderScroll = null;
 
@@ -60,7 +61,26 @@ export function renderWeatherPlaylistPage() {
 
       <!-- 플레이리스트 목록 -->
       <section class="playlist-section">
-        <div class="playlist-list" id="weatherPlaylistSongTable"></div>
+        <table class="song-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Title</th>
+              <th>Release Date</th>
+              <th>Duration</th>
+              <th>Add</th>
+            </tr>
+          </thead>
+
+          <tbody id="weatherPlaylistTableBody"></tbody>
+        </table>
+
+        <div id="weatherPlaylistLoading" class="loading" hidden>
+          <div class="loading__spinner"></div>
+          <span>추천곡을 불러오는 중...</span>
+        </div>
+
+        <div id="weatherPlaylistObserver" class="song-table-page__observer"></div>
       </section>
     </div>
   `;
@@ -79,12 +99,20 @@ export function initWeatherPlaylistPage() {
   }
 
   const cleanupStickyHeader = renderPlaylistHero(playlist);
-  renderWeatherTracks(playlistType, playlist);
-  initSongTable();
+  const cleanupSongTable = initSongTablePage({
+    apiUrl: API_ENDPOINTS.weatherRecommend(playlistType),
+    tableBodyId: "weatherPlaylistTableBody",
+    loadingId: "weatherPlaylistLoading",
+    observerId: "weatherPlaylistObserver",
+    limit: 10,
+  });
 
   console.log("Weather Playlist page loaded");
 
-  return cleanupStickyHeader;
+  return () => {
+    cleanupSongTable?.();
+    cleanupStickyHeader?.();
+  };
 }
 
 // =========================
@@ -173,60 +201,6 @@ function initStickyHeader(title) {
   };
 
   return cleanupStickyHeaderScroll;
-}
-
-// =========================
-// 재생시간 문자열을 ms로 변환
-// 예: "4:12" -> 252000
-// =========================
-function convertDurationToMs(duration) {
-  if (!duration) return 0;
-
-  const [minutes, seconds] = duration.split(":").map(Number);
-
-  if (Number.isNaN(minutes) || Number.isNaN(seconds)) {
-    return 0;
-  }
-
-  return (minutes * 60 + seconds) * 1000;
-}
-
-// =========================
-// songTable.js에 맞는 곡 데이터로 변환
-// =========================
-function convertToSongTableTracks(tracks, playlistType, playlist) {
-  return tracks.map((track) => ({
-    id: `${playlistType}-${track.id}`,
-    title: track.title,
-    artist: track.artist,
-    durationMs: convertDurationToMs(track.duration),
-    cover: track.image,
-    releaseDate: playlist.weather,
-    album: playlist.title,
-  }));
-}
-
-// =========================
-// 날씨 플레이리스트 곡 목록 렌더링
-// songTable.js 사용
-// =========================
-function renderWeatherTracks(playlistType, playlist) {
-  const tableContainer = document.querySelector("#weatherPlaylistSongTable");
-  const tracks = weatherTracks[playlistType] || [];
-
-  if (!tableContainer) return;
-
-  const songTableTracks = convertToSongTableTracks(
-    tracks,
-    playlistType,
-    playlist,
-  );
-
-  tableContainer.innerHTML = renderSongTable(songTableTracks, {
-    actionType: "playlist",
-    actionHeader: "Add",
-    emptyMessage: "아직 추천된 곡이 없습니다.",
-  });
 }
 
 // =========================

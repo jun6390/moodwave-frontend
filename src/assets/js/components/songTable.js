@@ -150,7 +150,17 @@ async function getTracks(apiUrl, page, limit, signal) {
     throw new Error("곡 데이터 요청 실패");
   }
 
-  return response.json();
+  const data = await response.json();
+
+  if (Array.isArray(data)) {
+    return data;
+  }
+
+  if (Array.isArray(data?.tracks)) {
+    return data.tracks;
+  }
+
+  return [];
 }
 
 // =========================

@@ -1,8 +1,7 @@
 import { API_ENDPOINTS } from "../api/api.js";
-import { renderSongTable, initSongTable } from "../components/songTable.js";
+import { initSongTablePage } from "../components/songTable.js";
 import {
   renderLoading,
-  setLoading,
   setContentVisible,
 } from "../components/loading.js";
 
@@ -50,22 +49,6 @@ const artistGenreMap = {
   "Dragon Pony": "K-rock",
   kinoshita: "J-pop",
 };
-
-const demoWeatherList = [
-  "Sunny",
-  "Sunny",
-  "Sunny",
-  "Sunny",
-  "Sunny",
-  "Sunny",
-  "Cloudy",
-  "Cloudy",
-  "Cloudy",
-  "Rainy",
-  "Rainy",
-  "Clear",
-  "Snowy",
-];
 
 let genreChartInstance = null;
 let weatherChartInstance = null;
@@ -141,7 +124,12 @@ async function getChartMusicData() {
   }
 
   chartDataRequestPromise = (async () => {
-    const response = await fetch(API_ENDPOINTS.music);
+    const url = new URL(API_ENDPOINTS.tasteRecommend, window.location.origin);
+    url.searchParams.set("limit", "100");
+
+    const response = await fetch(url.toString(), {
+      credentials: "include",
+    });
 
     if (!response.ok) {
       throw new Error("음악 데이터 조회 실패");
@@ -222,9 +210,23 @@ export function renderChartPage() {
           </p>
         </div>
 
+        <table class="song-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Title</th>
+              <th>Release Date</th>
+              <th>Duration</th>
+              <th>Add</th>
+            </tr>
+          </thead>
+
+          <tbody id="chartTableBody"></tbody>
+        </table>
+
         ${renderLoading("chartRecommendLoading", "추천곡을 불러오는 중...")}
 
-        <div id="chartSongTable" hidden></div>
+        <div id="chartRecommendObserver" class="song-table-page__observer"></div>
       </section>
     </section>
   `;
@@ -261,13 +263,16 @@ function renderChartSkeleton() {
 // =========================
 export function initChartPage() {
   const runId = ++activeChartRunId;
-  const songTableContainer = document.querySelector("#chartSongTable");
+  const cleanupSongTable = initSongTablePage({
+    apiUrl: API_ENDPOINTS.tasteRecommend,
+    tableBodyId: "chartTableBody",
+    loadingId: "chartRecommendLoading",
+    observerId: "chartRecommendObserver",
+    limit: 10,
+  });
 
   setContentVisible("chartSkeleton", true);
   setContentVisible("chartDashboard", false);
-
-  setLoading("chartRecommendLoading", true);
-  setContentVisible("chartSongTable", false);
 
   (async () => {
     try {
@@ -276,19 +281,7 @@ export function initChartPage() {
 
       if (runId !== activeChartRunId) return;
 
-      const data = apiData.map((song, index) =>
-        normalizeChartData(song, index),
-      );
-
-      const topGenres = getTopDataByField(data, "genre");
-      const topWeather = getTopDataByField(data, "weather");
-
-      const mostListenedGenre = topGenres[0]?.[0];
-
-      const recommendedSongs = data
-        .filter((song) => song.genre === mostListenedGenre)
-        .slice(0, 10)
-        .map(normalizeSongData);
+      const { topGenres, topWeather } = normalizeTasteRecommendData(apiData);
 
       setContentVisible("chartSkeleton", false);
       setContentVisible("chartDashboard", true);
@@ -300,15 +293,6 @@ export function initChartPage() {
       renderGenreChart(topGenres);
       renderWeatherChart(topWeather);
 
-      if (songTableContainer) {
-        songTableContainer.innerHTML = renderSongTable(recommendedSongs, {
-          actionType: "playlist",
-          actionHeader: "Add",
-          emptyMessage: "추천할 곡이 없습니다.",
-        });
-      }
-
-      initSongTable();
     } catch (error) {
       if (runId !== activeChartRunId) return;
 
@@ -319,19 +303,6 @@ export function initChartPage() {
 
       renderGenreChart([]);
       renderWeatherChart([]);
-
-      if (songTableContainer) {
-        songTableContainer.innerHTML = `
-          <div class="empty-message">
-            음악 데이터를 불러오지 못했습니다.
-          </div>
-        `;
-      }
-    } finally {
-      if (runId !== activeChartRunId) return;
-
-      setLoading("chartRecommendLoading", false);
-      setContentVisible("chartSongTable", true);
     }
   })();
 
@@ -341,13 +312,29 @@ export function initChartPage() {
     }
 
     destroyChartInstances();
+    cleanupSongTable?.();
   };
 }
 
 // =========================
-// 차트용 데이터 정리
+// AI 취향 추천 응답 정리
 // =========================
-function normalizeChartData(song, index) {
+function normalizeTasteRecommendData(apiData) {
+  if (Array.isArray(apiData)) {
+    const data = apiData.map(normalizeChartData);
+    const topGenres = getTopDataByField(data, "genre");
+    const topWeather = getTopDataByField(data, "weather");
+
+    return { topGenres, topWeather };
+  }
+
+  return {
+    topGenres: normalizeStatData(apiData?.genreStats),
+    topWeather: normalizeStatData(apiData?.weatherStats),
+  };
+}
+
+function normalizeChartData(song) {
   const artist = normalizeText(
     song?.artist || song?.artistName || song?.artists?.[0]?.name,
     "Unknown Artist",
@@ -360,7 +347,7 @@ function normalizeChartData(song, index) {
 
   const weather = normalizeText(
     song?.weather || song?.weatherType || song?.weatherName,
-    demoWeatherList[index % demoWeatherList.length],
+    "Unknown",
   );
 
   const releaseDate = normalizeText(
@@ -377,54 +364,16 @@ function normalizeChartData(song, index) {
   };
 }
 
-// =========================
-// songTable.js에 맞게 데이터 정리
-// =========================
-function normalizeSongData(song) {
-  const artist = normalizeText(
-    song?.artist || song?.artistName || song?.artists?.[0]?.name,
-    "Unknown Artist",
-  );
+function normalizeStatData(stats) {
+  if (!Array.isArray(stats)) return [];
 
-  const cover =
-    song?.cover ||
-    song?.imageUrl ||
-    song?.albumImage ||
-    song?.albumCover ||
-    song?.album?.images?.[0]?.url ||
-    "";
-
-  const releaseDate = normalizeText(
-    song?.releaseDate || song?.release_date || song?.album?.release_date,
-    "-",
-  );
-
-  const durationMs = song?.durationMs || song?.duration_ms || 0;
-
-  return {
-    id: song?.id,
-    musicId: song?.id,
-    trackId: song?.id,
-    spotifyId: song?.id,
-
-    title: normalizeText(song?.title || song?.name, "Unknown Title"),
-    artist,
-    artistName: artist,
-    description: artist,
-
-    cover,
-    imageUrl: cover,
-    albumCover: cover,
-    albumImage: cover,
-
-    releaseDate,
-    weather: normalizeText(song?.weather, "-"),
-    genre: normalizeText(song?.genre, "Etc"),
-
-    durationMs,
-    duration: song?.duration || song?.durationText,
-    uri: song?.uri || `spotify:track:${song?.id}`,
-  };
+  return stats
+    .map((stat) => [
+      normalizeText(stat?.label, "Unknown"),
+      Number(stat?.count) || 0,
+    ])
+    .filter(([, count]) => count > 0)
+    .slice(0, 6);
 }
 
 // =========================
