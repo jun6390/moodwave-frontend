@@ -36,3 +36,8 @@ Thumbs.db
 *.pptx
 *.pptx.inspect.ndjson
 MoodWave 최종 포트폴리오.md
+
+# Playwright
+playwright-report/
+test-results/
+blob-report/
