@@ -33,4 +33,6 @@ Thumbs.db
 # Local performance reports
 .lighthouse/
 .vite-preview.pid
+*.pptx
 *.pptx.inspect.ndjson
+MoodWave 최종 포트폴리오.md
