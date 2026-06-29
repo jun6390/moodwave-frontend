@@ -10,6 +10,10 @@ let homeDataCachedAt = 0;
 let homeDataRequestPromise = null;
 let activeHomeRunId = 0;
 
+function getOptimizedCoverUrl(cover = "") {
+  return cover.replace("/image/ab67616d0000b273", "/image/ab67616d00001e02");
+}
+
 function getCachedHomeData() {
   if (!homeDataCache) return null;
 
@@ -95,7 +99,7 @@ export function renderHome() {
 // 중간 믹스 카드 생성 함수
 // =========================
 function createMidMixCard(item, index) {
-  const cover = item.cover || item.imageUrl || "";
+  const cover = getOptimizedCoverUrl(item.cover || item.imageUrl || "");
   const artist = item.artist || item.description || "";
   const fetchPriority = index < 3 ? 'fetchpriority="high"' : "";
 
@@ -151,9 +155,11 @@ function renderMidMixes(data) {
 // =========================
 // 그리드 카드 생성 함수
 // =========================
-function createGridCard(item) {
-  const cover = item.cover || item.imageUrl || "";
+function createGridCard(item, isPriorityImage = false) {
+  const cover = getOptimizedCoverUrl(item.cover || item.imageUrl || "");
   const artist = item.artist || item.description || "";
+  const loading = isPriorityImage ? "eager" : "lazy";
+  const fetchPriority = isPriorityImage ? 'fetchpriority="high"' : "";
 
   return `
     <article
@@ -171,8 +177,9 @@ function createGridCard(item) {
           src="${cover}"
           width="182"
           height="182"
-          loading="lazy"
+          loading="${loading}"
           decoding="async"
+          ${fetchPriority}
           alt=""
         />
 
@@ -202,7 +209,11 @@ function renderGrid(selector, data) {
 
   if (!grid) return;
 
-  grid.innerHTML = data.map(createGridCard).join("");
+  const isPriorityGrid = selector === "#popularGrid";
+
+  grid.innerHTML = data
+    .map((item, index) => createGridCard(item, isPriorityGrid && index < HOME_SECTION_LIMIT))
+    .join("");
 }
 
 // =========================
