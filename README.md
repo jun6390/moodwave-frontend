@@ -33,7 +33,7 @@ AI 감정 분석, 날씨 기반 추천, 음악 취향 분석 기능을 제공하
   <tr>
     <td align="center" width="180px">
       <a href="https://github.com/jun6390">
-        <img src="https://github.com/haejunbag131-maker.png" width="120px;" alt="박해준"/>
+        <img src="https://github.com/jun6390.png" width="120px;" alt="박해준"/>
         <br />
         <sub><b>박해준</b></sub>
       </a>
