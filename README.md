@@ -1,5 +1,7 @@
 # MOOD WAVE
 
+[![CI](https://github.com/ureca-void/moodwave-frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/ureca-void/moodwave-frontend/actions/workflows/ci.yml)
+
 음악 스트리밍 개인화 추천 웹 서비스
 
 ---
