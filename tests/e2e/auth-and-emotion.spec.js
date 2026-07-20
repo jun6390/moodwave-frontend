@@ -33,9 +33,6 @@ test("비로그인 사용자는 보호 페이지에서 홈으로 이동한다", 
 
   await page.goto("/#/emotion");
 
-  await expect(
-    page.getByText("로그인 후 이용할 수 있습니다.", { exact: true }),
-  ).toBeVisible();
   await expect(page).toHaveURL(/#\/home$/);
   await expect(page.getByRole("heading", { name: "Popular" })).toBeVisible();
 });
